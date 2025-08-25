@@ -1,0 +1,5 @@
+{
+  "name": "Ride Sharing App",
+  "description": "A demo UI for a ride sharing application, allowing users to select ride types, adjust prices, and view ride details.",
+  "requestFramePermissions": []
+}
