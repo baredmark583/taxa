@@ -10,6 +10,7 @@ import Header from './components/Header';
 import SkeletonAdCard from './components/SkeletonAdCard';
 import Toast from './components/Toast';
 import Spinner from './components/Spinner';
+import AdDetailView from './components/AdDetailView';
 
 // Note: Many components are temporarily disabled as they need to be refactored
 // to work with the new backend API and user system. This is an incremental process.
@@ -110,9 +111,7 @@ const App: React.FC = () => {
         // FIX: Added the required 'currentUser' prop to CreateAdView.
         return <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} />;
       case 'detail':
-        // TODO: AdDetailView needs significant refactoring for new API
-        // FIX: Removed unsupported props 'activeSearch' and 'onSearchApplied' from HomeView call.
-        return selectedAd ? <div className="text-white">Ad Detail for {selectedAd.title} - Refactor needed</div> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
+        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} /> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
       case 'profile':
         return <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} />;
       case 'home':
