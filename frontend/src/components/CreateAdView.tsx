@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { type Ad, type GeneratedAdData, type User } from '../types';
+import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
 import { generateAdContent, createAd } from '../apiClient';
 import Spinner from './Spinner';
 
@@ -7,7 +7,7 @@ interface CreateAdViewProps {
   onCreateAd: (newAd: Ad) => void;
   onUpdateAd: (updatedAd: Ad) => void;
   adToEdit: Ad | null;
-  currentUser: User | null;
+  currentUser: AuthUser;
   showToast: (message: string) => void;
 }
 
@@ -43,7 +43,6 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Simplified for brevity
   useEffect(() => {
     if (isEditMode && adToEdit) {
       // Logic to populate fields for editing
@@ -87,7 +86,10 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
     setError(null);
 
     try {
-        const imageUrls = imagePreviews.map(p => p.dataUrl);
+        // NOTE: In a real app, you would upload images to a storage service (like S3)
+        // and get back URLs. For this example, we'll send data URLs, but this is inefficient.
+        // The backend should be prepared to handle base64 data URLs.
+        const imageUrls = imagePreviews.map(p => p.dataUrl); 
         
         if (imageUrls.length === 0) {
             setError('Необхідно додати хоча б одне фото.');
@@ -107,11 +109,22 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
     }
   };
   
+  const getTitle = () => {
+    if (isEditMode) return "Редагування";
+    if (step === 'upload') return "Розмістити оголошення";
+    if (step === 'describe') return "Розкажіть про товар";
+    if (step === 'generating') return "AI творить магію...";
+    return "Перевірте оголошення";
+  };
+
   return (
     <div className="max-w-md mx-auto bg-tg-secondary-bg p-6 rounded-lg shadow-xl">
-        <h2 className="text-2xl font-bold mb-4 text-center">{isEditMode ? 'Редагування' : 'Створити оголошення'}</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center">{getTitle()}</h2>
         {step === 'upload' && (
-             <input type="file" accept="image/*" className="text-white" onChange={handleImageChange} multiple />
+             <label className="cursor-pointer w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center">
+                <span>Вибрати фото</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
+            </label>
         )}
         {step === 'describe' && (
             <div>
@@ -130,7 +143,10 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
              <div>
                 <input value={generatedData.title} onChange={(e) => setGeneratedData(d => d ? { ...d, title: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" />
                 <textarea value={generatedData.description} onChange={(e) => setGeneratedData(d => d ? { ...d, description: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" rows={5} />
-                <input value={generatedData.price} onChange={(e) => setGeneratedData(d => d ? { ...d, price: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" />
+                <input value={generatedData.price} onChange={(e) => setGeneratedData(d => d ? { ...d, price: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" placeholder="Ціна"/>
+                <input value={generatedData.location} onChange={(e) => setGeneratedData(d => d ? { ...d, location: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" placeholder="Місто"/>
+                <input value={generatedData.category} onChange={(e) => setGeneratedData(d => d ? { ...d, category: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" placeholder="Категорія"/>
+
                 <button onClick={handleSubmit} disabled={isPublishing} className="mt-4 w-full bg-green-600 p-3 rounded-lg">
                     {isPublishing ? 'Публікація...' : 'Опублікувати'}
                 </button>

@@ -12,6 +12,16 @@ export interface AuthUser extends User {
   token: string;
 }
 
+// Kept for components that haven't been fully refactored from the old Telegram-based system.
+export interface TelegramUser {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+}
+
+
 export interface Ad {
   id: string;
   title: string;
@@ -28,11 +38,20 @@ export interface Ad {
     id: string;
     name: string;
     avatarUrl?: string;
-    // We can add more seller details here later, like rating
+    // Optional fields for partial component compatibility
+    rating?: number;
+    reviewsCount?: number;
+    isVerified?: boolean;
+    telegramUsername?: string; // Kept for legacy compatibility
   };
   status: AdStatus;
   isBoosted?: boolean;
-  // Stats would be calculated on the backend now
+   // Optional fields for component compatibility
+  stats?: {
+    views: number;
+    favorites: number;
+  };
+  allowOffers?: boolean;
 }
 
 export interface GeneratedAdData {
@@ -46,35 +65,55 @@ export interface GeneratedAdData {
 
 export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following';
 
-
 export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_delivery';
 
-// Other types remain largely the same for now
 export interface Review {
-  id: string;
-  authorId: string;
-  authorName: string;
-  authorAvatarUrl?: string;
-  sellerId: string;
-  rating: number; // 1 to 5
-  text: string;
-  createdAt: string;
+    id: string;
+    authorId: string;
+    authorName: string;
+    authorAvatarUrl?: string;
+    sellerId: string;
+    rating: number; // 1 to 5
+    text: string;
+    createdAt: string;
 }
 
+export interface NewReviewPayload {
+    sellerId: string;
+    rating: number;
+    text: string;
+}
+
+export interface OfferDetails {
+    price: string;
+    status: 'pending' | 'accepted' | 'declined';
+}
+
+export interface SecureDealDetails {
+    status: 'payment_pending' | 'shipping_pending' | 'delivery_pending' | 'completed';
+    adId: string;
+    sellerId: string;
+    buyerId: string;
+}
+
+
 export interface ChatMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  text?: string;
-  imageUrl?: string;
-  timestamp: string;
-  isRead: boolean;
-  adId?: string;
+    id: string;
+    senderId: string;
+    receiverId: string;
+    text?: string;
+    imageUrl?: string;
+    timestamp: string; // ISO 8601
+    isRead: boolean;
+    isSystemMessage?: boolean;
+    offerDetails?: OfferDetails;
+    secureDealDetails?: SecureDealDetails;
+    adId?: string; // The ad this message is about
 }
 
 export interface ChatConversation {
-    id: string;
-    adId?: string;
+    id: string; // combination of user IDs and potentially ad ID
+    adId?: string; // The ad this conversation is about
     participant: {
         id: string;
         name: string;
@@ -82,4 +121,46 @@ export interface ChatConversation {
     };
     lastMessage: ChatMessage;
     unreadCount: number;
+}
+
+
+export interface SavedSearch {
+  id: string;
+  query: string;
+  category: string;
+  filters: {
+    location: string;
+    priceFrom: string;
+    priceTo: string;
+  };
+  createdAt: string;
+}
+
+export interface ImageSearchQuery {
+    query: string;
+    category: string;
+}
+
+export interface Question {
+    id: string;
+    adId: string;
+    authorId: string;
+    authorName: string;
+    authorAvatarUrl?: string;
+    text: string;
+    createdAt: string;
+    answer?: Answer;
+}
+
+export interface Answer {
+    id: string;
+    questionId: string;
+    authorId: string; // Seller's ID
+    text: string;
+    createdAt: string;
+}
+
+export interface Follow {
+    followerId: string;
+    sellerId: string;
 }

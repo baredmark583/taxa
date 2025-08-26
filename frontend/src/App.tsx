@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { type Ad, type Page, type ChatConversation } from './types';
-import { getAds, createAd } from './apiClient';
+import { type Ad, type Page } from './types';
+import { getAds } from './apiClient';
 import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
 import HomeView from './components/HomeView';
@@ -11,7 +11,7 @@ import SkeletonAdCard from './components/SkeletonAdCard';
 import Toast from './components/Toast';
 import Spinner from './components/Spinner';
 
-// Note: Many components are commented out as they need to be refactored
+// Note: Many components are temporarily disabled as they need to be refactored
 // to work with the new backend API and user system. This is an incremental process.
 
 const App: React.FC = () => {
@@ -33,10 +33,10 @@ const App: React.FC = () => {
       const response = await getAds();
       setAds(response.data);
 
-    } catch (err) {
+    } catch (err: any) {
       setError('Не вдалося завантажити дані. Спробуйте оновити сторінку.');
       console.error(err);
-      if ((err as any).response?.status === 401) { // Unauthorized
+      if (err.response?.status === 401) { // Unauthorized
           logout();
       }
     } finally {
@@ -107,10 +107,10 @@ const App: React.FC = () => {
 
     switch (currentPage) {
       case 'create':
-        return <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} currentUser={user} showToast={showToast} />;
+        return <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} />;
       case 'detail':
-         // TODO: AdDetailView needs significant refactoring for new API
-        return selectedAd ? <div>Ad Detail for {selectedAd.title}</div> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} activeSearch={null} onSearchApplied={() => {}} />;
+        // TODO: AdDetailView needs significant refactoring for new API
+        return selectedAd ? <div className="text-white">Ad Detail for {selectedAd.title} - Refactor needed</div> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} activeSearch={null} onSearchApplied={() => {}} />;
       case 'profile':
         return <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} />;
       case 'home':
@@ -126,7 +126,7 @@ const App: React.FC = () => {
       <main className="p-4">
         {renderContent()}
       </main>
-      <button onClick={logout} className="fixed top-20 right-4 bg-red-500 text-white p-2 rounded-md text-sm">Logout</button>
+      <button onClick={logout} className="fixed bottom-4 left-4 bg-red-600/50 text-white p-2 rounded-lg text-xs hover:bg-red-600/80">Вийти</button>
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );

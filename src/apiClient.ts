@@ -1,9 +1,12 @@
 import axios from 'axios';
 import { type Ad, type GeneratedAdData } from './types';
 
-// The base URL will be handled by Vite's proxy in development or will be a relative path in production.
+// VERY IMPORTANT: Make sure you have VITE_API_BASE_URL set in your Render environment variables.
+// It should be the URL of your deployed backend service.
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: `/api`,
 });
 
 // Interceptor to add the auth token to every request
@@ -15,9 +18,6 @@ apiClient.interceptors.request.use(config => {
   return config;
 });
 
-// --- Auth ---
-export const registerUser = (data: any) => apiClient.post('/auth/register', data);
-export const loginUser = (data: any) => apiClient.post('/auth/login', data);
 
 // --- Ads ---
 export const getAds = (): Promise<{ data: Ad[] }> => apiClient.get('/ads');
@@ -27,7 +27,5 @@ export const createAd = (data: { adData: GeneratedAdData, imageUrls: string[] })
 export const generateAdContent = (prompt: string, imageBase64: string, mimeType: string): Promise<{ data: GeneratedAdData }> => {
     return apiClient.post('/gemini/generate-ad', { prompt, imageBase64, mimeType });
 }
-
-// ... other API functions will be added here as we migrate them ...
 
 export default apiClient;
