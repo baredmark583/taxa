@@ -35,10 +35,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const authUser: AuthUser = { ...data.user, token: data.token };
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('authUser', JSON.stringify(data.user));
-      // Set the base URL for subsequent requests if it's coming from a relative path
-      if (!apiClient.defaults.baseURL?.startsWith('http')) {
-        apiClient.defaults.baseURL = (import.meta.env.VITE_API_BASE_URL || '') + '/api';
-      }
       setUser(authUser);
   };
 

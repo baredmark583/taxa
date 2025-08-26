@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { type Ad, type Page } from '../types';
 import AdCard from './AdCard';
@@ -10,14 +11,14 @@ interface HomeViewProps {
   favoriteAdIds: Set<string>;
   onToggleFavorite: (adId: string) => void;
   showToast: (message: string) => void;
-  activeSearch: any | null; 
-  onSearchApplied: () => void;
+  // FIX: Removed legacy props that are no longer used by this component.
 }
 
 type SortBy = 'date' | 'price_asc' | 'price_desc';
 
 const CATEGORIES = ['Все', 'Електроніка', 'Меблі', 'Одяг', 'Хобі', 'Інше'];
 
+// FIX: Removed unused props from component signature.
 const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
   const [selectedCategory, setSelectedCategory] = useState('Все');
   const [searchQuery, setSearchQuery] = useState('');

@@ -1,5 +1,5 @@
 {
-  "name": "teleboard-ai-frontend",
+  "name": "taxa-ai-frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,7 +11,7 @@
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "@google/genai": "^1.15.0"
+    "axios": "^1.7.2"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",

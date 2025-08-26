@@ -1,5 +1,7 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { type Ad, type GeneratedAdData, type User } from '../types';
+// FIX: Changed User to AuthUser to match the type provided by useAuth hook.
+import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
 import { generateAdContent, createAd } from '../apiClient';
 import Spinner from './Spinner';
 
@@ -7,6 +9,8 @@ interface CreateAdViewProps {
   onCreateAd: (newAd: Ad) => void;
   onUpdateAd: (updatedAd: Ad) => void;
   adToEdit: Ad | null;
+  // FIX: Added currentUser prop to be passed from App.tsx.
+  currentUser: AuthUser;
   showToast: (message: string) => void;
 }
 
@@ -32,7 +36,8 @@ const fileToDataUrl = (file: File): Promise<{ dataUrl: string, base64: string }>
   });
 };
 
-const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adToEdit, showToast }) => {
+// FIX: Added currentUser to the component's destructured props.
+const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adToEdit, currentUser, showToast }) => {
   const isEditMode = !!adToEdit;
 
   const [step, setStep] = useState<WizardStep>(isEditMode ? 'review' : 'upload');
