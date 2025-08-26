@@ -1,4 +1,4 @@
-import { type Response } from 'express';
+import { Response } from 'express';
 import { type AuthRequest } from '../middleware/auth';
 import { generateAdDetailsFromImage } from '../services/geminiService';
 

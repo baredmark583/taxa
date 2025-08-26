@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
 import HomeView from './components/HomeView';
 import CreateAdView from './components/CreateAdView';
-import AdDetailView from './components/AdDetailView';
+import ProfileView from './components/ProfileView';
 import Header from './components/Header';
 import SkeletonAdCard from './components/SkeletonAdCard';
 import Toast from './components/Toast';
@@ -111,6 +111,8 @@ const App: React.FC = () => {
       case 'detail':
          // TODO: AdDetailView needs significant refactoring for new API
         return selectedAd ? <div>Ad Detail for {selectedAd.title}</div> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} activeSearch={null} onSearchApplied={() => {}} />;
+      case 'profile':
+        return <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} />;
       case 'home':
       default:
         // TODO: Favorites needs to be implemented on backend

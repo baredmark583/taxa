@@ -1,4 +1,4 @@
-import { type Response } from 'express';
+import { Response } from 'express';
 import prisma from '../db';
 import { type AuthRequest } from '../middleware/auth';
 import { type GeneratedAdData } from '../types';
