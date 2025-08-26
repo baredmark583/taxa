@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { type Ad, type AdStatus } from '../types';
 import { formatPrice } from '../utils/formatters';

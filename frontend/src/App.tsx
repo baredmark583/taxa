@@ -1,5 +1,6 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
-import { type Ad, type Page } from './types';
+import { type Ad, type Page, type AuthUser } from './types';
 import { getAds } from './apiClient';
 import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
@@ -110,13 +111,13 @@ const App: React.FC = () => {
         return <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} />;
       case 'detail':
         // TODO: AdDetailView needs significant refactoring for new API
-        return selectedAd ? <div className="text-white">Ad Detail for {selectedAd.title} - Refactor needed</div> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} activeSearch={null} onSearchApplied={() => {}} />;
+        return selectedAd ? <div className="text-white">Ad Detail for {selectedAd.title} - Refactor needed</div> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
       case 'profile':
         return <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} />;
       case 'home':
       default:
         // TODO: Favorites needs to be implemented on backend
-        return <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} activeSearch={null} onSearchApplied={() => {}} />;
+        return <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
     }
   };
 

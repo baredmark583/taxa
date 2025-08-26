@@ -3,6 +3,6 @@
   "description": "Дошка оголошень на базі AI для Telegram. Завантажте фото, напишіть короткий опис, і Gemini створить для вас ідеальне оголошення.",
   "requestFramePermissions": [
     "camera",
-    "microphone"  
+    "microphone"
   ]
 }

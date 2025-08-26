@@ -1,3 +1,4 @@
+
 // Represents the user model from our database
 export interface User {
   id: string;

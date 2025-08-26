@@ -1,3 +1,4 @@
+
 export interface Ad {
   id: string;
   title: string;
@@ -37,6 +38,7 @@ export interface GeneratedAdData {
 }
 
 export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following';
+
 
 export interface TelegramUser {
   id: number;

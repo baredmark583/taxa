@@ -1,9 +1,7 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { type Ad, type Page } from '../types';
 import AdCard from './AdCard';
-// import { findRelevantAds } from '../apiClient'; // This will be a new backend endpoint
-import Spinner from './Spinner';
-import FilterSheet from './FilterSheet';
 import { EmptyBoxIcon } from './icons/EmptyBoxIcon';
 
 interface HomeViewProps {
@@ -13,35 +11,24 @@ interface HomeViewProps {
   favoriteAdIds: Set<string>;
   onToggleFavorite: (adId: string) => void;
   showToast: (message: string) => void;
-  activeSearch: any | null; // Type needs to be updated
-  onSearchApplied: () => void;
 }
 
 type SortBy = 'date' | 'price_asc' | 'price_desc';
-interface Filters {
-    location: string;
-    priceFrom: string;
-    priceTo: string;
-}
 
 const CATEGORIES = ['Все', 'Електроніка', 'Меблі', 'Одяг', 'Хобі', 'Інше'];
 
-
-const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite, showToast, activeSearch, onSearchApplied }) => {
+const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
   const [selectedCategory, setSelectedCategory] = useState('Все');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('date');
-  const [filters, setFilters] = useState<Filters>({ location: '', priceFrom: '', priceTo: '' });
   
   const filteredAndSortedAds = useMemo(() => {
     let result = ads;
 
-    // Filter by category
     if (selectedCategory !== 'Все') {
       result = result.filter(ad => ad.category === selectedCategory);
     }
 
-    // Filter by search query (simple text search for now)
     if (searchQuery.trim()) {
         const lowercasedQuery = searchQuery.toLowerCase();
         result = result.filter(ad => 
@@ -50,18 +37,6 @@ const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, fav
         );
     }
     
-    // Apply advanced filters
-    if (filters.location) {
-        result = result.filter(ad => ad.location.toLowerCase().includes(filters.location.toLowerCase()));
-    }
-    if (filters.priceFrom) {
-        result = result.filter(ad => parseInt(ad.price, 10) >= parseInt(filters.priceFrom, 10));
-    }
-    if (filters.priceTo) {
-        result = result.filter(ad => parseInt(ad.price, 10) <= parseInt(filters.priceTo, 10));
-    }
-    
-    // Apply sorting
     const sortedResult = [...result];
     sortedResult.sort((a, b) => {
         if (a.isBoosted && !b.isBoosted) return -1;
@@ -75,7 +50,7 @@ const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, fav
     });
 
     return sortedResult;
-  }, [ads, selectedCategory, searchQuery, sortBy, filters]);
+  }, [ads, selectedCategory, searchQuery, sortBy]);
 
   return (
     <div>
@@ -130,7 +105,7 @@ const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, fav
         className="fixed bottom-6 right-6 bg-tg-button text-tg-button-text p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-tg-bg focus:ring-tg-link"
         aria-label="Створити нове оголошення"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
         </svg>
       </button>

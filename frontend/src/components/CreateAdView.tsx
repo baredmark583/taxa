@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
 import { generateAdContent, createAd } from '../apiClient';
