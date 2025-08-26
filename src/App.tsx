@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { type Ad, type Page, type AuthUser } from './types';
 import { getAds } from './apiClient';

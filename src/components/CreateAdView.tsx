@@ -1,5 +1,3 @@
-
-
 import React, { useState, useCallback, useEffect } from 'react';
 // FIX: Changed User to AuthUser to match the type provided by useAuth hook.
 import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
