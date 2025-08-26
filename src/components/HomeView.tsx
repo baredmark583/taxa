@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { type Ad, type Page } from '../types';
 import AdCard from './AdCard';
