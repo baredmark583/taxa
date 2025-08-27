@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { type AuthUser, type User } from './types';
+import { telegramLogin as apiTelegramLogin } from './apiClient';
 import apiClient from './apiClient';
 
 interface AuthContextType {
@@ -17,18 +18,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('authUser');
-    if (token && userData) {
-      try {
-        const parsedUser: User = JSON.parse(userData);
-        setUser({ ...parsedUser, token });
-      } catch (e) {
-        console.error("Failed to parse user data from storage", e);
-        localStorage.clear();
-      }
-    }
-    setIsLoading(false);
+    const attemptAutoLogin = async () => {
+        const token = localStorage.getItem('authToken');
+        const userData = localStorage.getItem('authUser');
+        
+        // The type for window.Telegram is not available by default, so we use 'any'
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg && tg.initData) {
+            try {
+                const { data } = await apiTelegramLogin(tg.initData);
+                handleAuthSuccess(data);
+                if (tg.ready) tg.ready(); // Inform Telegram the app is ready
+                return;
+            } catch (e) {
+                console.error("Telegram login failed", e);
+                // Clear any potentially invalid stored data if TG auth fails
+                localStorage.clear();
+            }
+        }
+        
+        // Fallback to existing token in localStorage if not in Telegram
+        else if (token && userData) {
+            try {
+                const parsedUser: User = JSON.parse(userData);
+                setUser({ ...parsedUser, token });
+            } catch (e) {
+                console.error("Failed to parse user data from storage", e);
+                localStorage.clear();
+            }
+        }
+        
+        setIsLoading(false);
+    };
+    
+    attemptAutoLogin();
   }, []);
   
   const handleAuthSuccess = (data: { token: string; user: User }) => {
@@ -52,6 +75,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
+    // Potentially reload to clear all state and force re-auth
+    window.location.reload();
   };
 
   return (

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser } from './types';
 
 // The base URL will be handled by Vite's proxy in development or will be a relative path in production.
 const apiClient = axios.create({
@@ -18,6 +18,7 @@ apiClient.interceptors.request.use(config => {
 // --- Auth ---
 export const registerUser = (data: any) => apiClient.post('/auth/register', data);
 export const loginUser = (data: any) => apiClient.post('/auth/login', data);
+export const telegramLogin = (initData: string): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/auth/telegram', { initData });
 
 // --- Ads ---
 export const getAds = (): Promise<{ data: Ad[] }> => apiClient.get('/ads');
