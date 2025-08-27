@@ -25,13 +25,15 @@ const getPageTitle = (page: Page): string => {
         return 'Обране';
     case 'chats':
         return 'Чати';
+    case 'admin':
+        return 'Адмін Панель';
     default:
       return 'Taxa AI';
   }
 };
 
 const Header: React.FC<HeaderProps> = ({ currentPage, goBack, navigateTo, unreadMessagesCount }) => {
-  const showBackButton = ['create', 'detail', 'profile', 'favorites', 'chats'].includes(currentPage);
+  const showBackButton = ['create', 'detail', 'profile', 'favorites', 'chats', 'admin'].includes(currentPage);
   
   return (
     <header className="sticky top-0 z-20 bg-tg-secondary-bg/80 backdrop-blur-md shadow-sm">
@@ -39,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({ currentPage, goBack, navigateTo, unread
         <div className="w-1/3">
           {showBackButton ? (
             <button onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-tg-secondary-bg-hover">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>

@@ -3,6 +3,7 @@ import { type Ad, type Page, type AuthUser } from './types';
 import { getAds } from './apiClient';
 import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
+import AdminPage from './pages/AdminPage';
 import HomeView from './components/HomeView';
 import CreateAdView from './components/CreateAdView';
 import ProfileView from './components/ProfileView';
@@ -72,7 +73,7 @@ const App: React.FC = () => {
   }, []);
 
   const goBack = () => {
-    if (['detail', 'create', 'profile', 'favorites', 'chats'].includes(currentPage)) {
+    if (['detail', 'create', 'profile', 'favorites', 'chats', 'admin'].includes(currentPage)) {
       navigateTo('home');
       setSelectedAd(null);
     }
@@ -87,7 +88,7 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
-    if (isLoadingData) {
+    if (isLoadingData && currentPage !== 'admin') {
       return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, index) => (
@@ -108,16 +109,15 @@ const App: React.FC = () => {
 
     switch (currentPage) {
       case 'create':
-        // FIX: Added the required 'currentUser' prop to CreateAdView.
         return <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} />;
       case 'detail':
         return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} /> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
       case 'profile':
         return <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} />;
+      case 'admin':
+        return user.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>Access Denied</p>;
       case 'home':
       default:
-        // TODO: Favorites needs to be implemented on backend
-        // FIX: Removed unsupported props 'activeSearch' and 'onSearchApplied' from HomeView call.
         return <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
     }
   };

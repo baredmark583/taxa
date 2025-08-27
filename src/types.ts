@@ -3,6 +3,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  role: 'USER' | 'ADMIN';
   avatarUrl?: string;
   createdAt: string;
 }
@@ -63,7 +64,7 @@ export interface GeneratedAdData {
   tags: string[];
 }
 
-export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following';
+export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'admin';
 
 export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_delivery';
 
@@ -77,6 +78,16 @@ export interface Review {
     text: string;
     createdAt: string;
 }
+
+// --- Admin Panel Specific Types ---
+export interface AdminUser extends User {
+    // any admin-specific fields can go here
+}
+
+export interface AdminAd extends Ad {
+    sellerName: string; // From the DB join
+}
+
 
 export interface NewReviewPayload {
     sellerId: string;
