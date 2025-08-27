@@ -18,7 +18,7 @@ import AdDetailView from './components/AdDetailView';
 // to work with the new backend API and user system. This is an incremental process.
 
 const App: React.FC = () => {
-  const { user, isLoading: isAuthLoading, logout } = useAuth();
+  const { user, isLoading: isAuthLoading, logout, authError } = useAuth();
   
   const [ads, setAds] = useState<Ad[]>([]);
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -111,7 +111,7 @@ const App: React.FC = () => {
   }
   
   if (!user) {
-      return <AuthPage />;
+      return <AuthPage authError={authError} />;
   }
 
   const renderContent = () => {

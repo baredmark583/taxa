@@ -8,8 +8,11 @@ const TelegramIcon = () => (
     </svg>
 );
 
+interface AuthPageProps {
+    authError: string | null;
+}
 
-const AuthPage: React.FC = () => {
+const AuthPage: React.FC<AuthPageProps> = ({ authError }) => {
     // IMPORTANT: Replace this with your actual bot's username
     const botUsername = "taxaAIbot";
 
@@ -25,6 +28,14 @@ const AuthPage: React.FC = () => {
                 <p className="text-tg-hint">
                     Для доступу до всіх функцій, будь ласка, відкрийте цей додаток через нашого Telegram-бота.
                 </p>
+
+                {authError && (
+                    <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg my-4" role="alert">
+                        <p className="font-bold">Помилка авторизації</p>
+                        <p className="text-sm">{authError}</p>
+                    </div>
+                )}
+
                 <p className="text-tg-hint text-sm">
                     Якщо ви вже у Telegram, спробуйте перезапустити додаток.
                 </p>

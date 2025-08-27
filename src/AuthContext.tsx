@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (data: any) => Promise<void>;
   register: (data: any) => Promise<void>;
   logout: () => void;
+  authError: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     const attemptAutoLogin = async () => {
@@ -30,8 +32,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 handleAuthSuccess(data);
                 if (tg.ready) tg.ready(); // Inform Telegram the app is ready
                 return;
-            } catch (e) {
+            } catch (e: any) {
                 console.error("Telegram login failed", e);
+                const errorMessage = e.response?.data?.message === 'Invalid Telegram data' 
+                    ? 'Помилка валідації даних Telegram. Спробуйте повністю закрити та знову відкрити додаток.' 
+                    : 'Не вдалося увійти через Telegram. Перевірте з\'єднання та спробуйте ще раз.';
+                setAuthError(errorMessage);
                 // Clear any potentially invalid stored data if TG auth fails
                 localStorage.clear();
             }
@@ -80,7 +86,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, logout, authError }}>
       {children}
     </AuthContext.Provider>
   );
