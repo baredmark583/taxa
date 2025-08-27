@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { type Ad, type Page, type AuthUser } from './types';
-import { getAds } from './apiClient';
+// FIX: Added getAdById to imports.
+import { getAds, getAdById } from './apiClient';
 import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
 import AdminPage from './pages/AdminPage';
@@ -45,11 +46,37 @@ const App: React.FC = () => {
       if (showLoading) setIsLoadingData(false);
     }
   }, [user, logout]);
-
+  
+  // Effect for initial data load and deeplinking
   useEffect(() => {
-    if (user) {
-      refreshData(true);
-    }
+    if (!user) return;
+
+    const handleDeeplink = async () => {
+        // The type for window.Telegram is not available by default, so we use 'any'
+        const tg = (window as any).Telegram?.WebApp;
+        const startParam = tg?.initDataUnsafe?.start_param;
+
+        if (startParam) {
+            try {
+                // If there's a start_param, it's an ad ID. Fetch it directly.
+                const response = await getAdById(startParam);
+                setSelectedAd(response.data);
+                setCurrentPage('detail');
+                await refreshData(false); // Also load other ads in the background
+            } catch (err) {
+                console.error("Failed to load deeplinked ad:", err);
+                setError(`Не вдалося знайти оголошення (ID: ${startParam}).`);
+                await refreshData(true); // Load main list if deeplink fails
+            }
+        } else {
+            // No deeplink, just load all ads
+            await refreshData(true);
+        }
+        setIsLoadingData(false);
+    };
+
+    handleDeeplink();
+
   }, [user, refreshData]);
 
   const showToast = (message: string) => {
@@ -88,7 +115,7 @@ const App: React.FC = () => {
   }
 
   const renderContent = () => {
-    if (isLoadingData && currentPage !== 'admin') {
+    if (isLoadingData && !selectedAd) { // Don't show skeleton if we have a deeplinked ad
       return (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, index) => (

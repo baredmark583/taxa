@@ -11,7 +11,7 @@ const TelegramIcon = () => (
 
 const AuthPage: React.FC = () => {
     // IMPORTANT: Replace this with your actual bot's username
-    const botUsername = "taxa_ai_bot";
+    const botUsername = "taxaAIbot";
 
     return (
         <div className="flex items-center justify-center min-h-screen p-4 animate-modal-fade-in">

@@ -23,6 +23,9 @@ export const telegramLogin = (initData: string): Promise<{ data: { token: string
 // --- Ads ---
 export const getAds = (): Promise<{ data: Ad[] }> => apiClient.get('/ads');
 export const createAd = (data: { adData: GeneratedAdData, imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.post('/ads', data);
+// Add a function to get a single ad by ID
+export const getAdById = (id: string): Promise<{ data: Ad }> => apiClient.get(`/ads/${id}`);
+
 
 // --- Gemini ---
 export const generateAdContent = (prompt: string, imageBase64: string, mimeType: string): Promise<{ data: GeneratedAdData }> => {

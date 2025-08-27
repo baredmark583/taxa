@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Ad, AuthUser } from '../types';
 import { formatPrice, formatRelativeDate } from '../utils/formatters';
+import { ShareIcon } from './icons/ShareIcon';
 
 interface AdDetailViewProps {
   ad: Ad;
@@ -18,6 +19,32 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser }) => {
     setCurrentImageIndex((prevIndex) => (prevIndex - 1 + ad.imageUrls.length) % ad.imageUrls.length);
   };
 
+  const handleShare = async () => {
+    // IMPORTANT: Replace 'taxaAIbot' with your bot's username, and 'item' with the direct link name from BotFather.
+    const botUsername = 'taxaAIbot';
+    const directLinkName = 'item';
+    const shareUrl = `https://t.me/${botUsername}/${directLinkName}?startapp=${ad.id}`;
+    
+    const shareData = {
+        title: `Taxa AI: ${ad.title}`,
+        text: `Подивіться, що я знайшов на Taxa AI: "${ad.title}" за ${formatPrice(ad.price)}!`,
+        url: shareUrl,
+    };
+
+    if (navigator.share) {
+        try {
+            await navigator.share(shareData);
+        } catch (error) {
+            console.error('Error sharing:', error);
+        }
+    } else {
+        // Fallback for browsers/clients that don't support navigator.share
+        navigator.clipboard.writeText(shareUrl);
+        alert('Посилання скопійовано в буфер обміну!');
+    }
+  };
+
+
   const isMyAd = ad.seller.id === currentUser.id;
 
   return (
@@ -29,10 +56,10 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser }) => {
             <img src={ad.imageUrls[currentImageIndex]} alt={ad.title} className="w-full h-full object-contain" />
             {ad.imageUrls.length > 1 && (
               <>
-                <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors">
+                <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
                   &#10094;
                 </button>
-                <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors">
+                <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
                   &#10095;
                 </button>
                 <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
@@ -46,6 +73,10 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser }) => {
             Немає фото
           </div>
         )}
+         {/* Share button on top of the image */}
+        <button onClick={handleShare} className="absolute top-2 right-2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+            <ShareIcon />
+        </button>
       </div>
 
       <div className="p-4 space-y-4">
