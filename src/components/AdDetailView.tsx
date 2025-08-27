@@ -26,24 +26,23 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
     const botUsername = 'taxaAIbot';
     const directLinkName = 'item';
     const shareUrl = `https://t.me/${botUsername}/${directLinkName}?startapp=${ad.id}`;
+    const shareText = `Подивіться, що я знайшов на Taxa AI: "${ad.title}" за ${formatPrice(ad.price)}!`;
     const tg = (window as any).Telegram?.WebApp;
 
-    // Inside Telegram, navigator.share is unreliable. We default to copying the link.
+    // Inside Telegram, use the native sharing functionality.
     if (tg) {
-      navigator.clipboard.writeText(shareUrl).then(() => {
-        showToast('Посилання для поширення скопійовано!');
-        if (tg.HapticFeedback?.impactOccurred) {
-          tg.HapticFeedback.impactOccurred('light');
-        }
-      });
-      return;
+        const telegramShareUrl = new URL('https://t.me/share/url');
+        telegramShareUrl.searchParams.set('url', shareUrl);
+        telegramShareUrl.searchParams.set('text', shareText);
+        tg.openTelegramLink(telegramShareUrl.toString());
+        return;
     }
 
     // Outside Telegram, try the Web Share API first.
     if (navigator.share) {
       const shareData = {
         title: `Taxa AI: ${ad.title}`,
-        text: `Подивіться, що я знайшов на Taxa AI: "${ad.title}" за ${formatPrice(ad.price)}!`,
+        text: shareText,
         url: shareUrl,
       };
       try {
