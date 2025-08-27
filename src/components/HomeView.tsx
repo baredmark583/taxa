@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { type Ad, type Page } from '../types';
 import AdCard from './AdCard';
-import { EmptyBoxIcon } from './icons/EmptyBoxIcon';
+import { Icon } from '@iconify/react';
 
 interface HomeViewProps {
   ads: Ad[];
@@ -96,7 +96,7 @@ const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, fav
         </div>
       ) : (
         <div className="text-center text-tg-hint mt-12 flex flex-col items-center">
-            <EmptyBoxIcon />
+            <Icon icon="lucide:package-search" className="h-20 w-20 text-tg-border" />
             <p className="text-lg mt-4">Нічого не знайдено</p>
         </div>
       )}
@@ -106,9 +106,7 @@ const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, fav
         className="fixed bottom-6 right-6 bg-tg-button text-tg-button-text p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-tg-bg focus:ring-tg-link"
         aria-label="Створити нове оголошення"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
+        <Icon icon="lucide:plus" className="h-8 w-8" />
       </button>
     </div>
   );

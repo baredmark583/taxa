@@ -81,7 +81,9 @@ export interface Review {
 
 // --- Admin Panel Specific Types ---
 export interface AdminUser extends User {
-    // any admin-specific fields can go here
+    latitude: number | null;
+    longitude: number | null;
+    city: string | null;
 }
 
 export interface AdminAd extends Ad {

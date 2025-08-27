@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import Spinner from '../components/Spinner';
+import { Icon } from '@iconify/react';
 
-// A simple SVG icon for Telegram
-const TelegramIcon = () => (
-    <svg viewBox="0 0 48 48" className="w-6 h-6">
-        <path fill="#29B6F6" d="M24 4C12.954 4 4 12.954 4 24s8.954 20 20 20 20-8.954 20-20S35.046 4 24 4z"></path>
-        <path fill="#FFF" d="M34 14l-4.408 19.116c-.246 1.06-1.002 1.34-1.892.834L20 28l-4 4-1-6 19-12-15 11-1-6z"></path>
-    </svg>
-);
 
 interface AuthPageProps {
     onAuthSuccess: () => void;
@@ -52,7 +46,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                 {isTgBrowser ? (
                     <div className="text-center">
                         <div className="flex justify-center mb-4">
-                           <TelegramIcon />
+                           <Icon icon="mdi:telegram" className="w-12 h-12 text-[#29B6F6]" />
                         </div>
                         <h2 className="text-2xl font-bold text-tg-text">
                             Вітаємо у Taxa AI
@@ -134,7 +128,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                             rel="noopener noreferrer"
                             className="w-full inline-flex items-center justify-center px-4 py-3 font-semibold text-tg-button-text bg-[#29B6F6] rounded-md hover:bg-opacity-90 transition-transform hover:scale-105"
                         >
-                           <TelegramIcon /> <span className="ml-2">Увійти через Telegram</span>
+                           <Icon icon="mdi:telegram" className="w-6 h-6" /> <span className="ml-2">Увійти через Telegram</span>
                         </a>
                     </>
                 )}

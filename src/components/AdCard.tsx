@@ -1,6 +1,7 @@
 import React from 'react';
 import { type Ad, type AdStatus } from '../types';
 import { formatPrice } from '../utils/formatters';
+import { Icon } from '@iconify/react';
 
 interface AdCardProps {
   ad: Ad;
@@ -45,9 +46,7 @@ const FavoriteButton: React.FC<{ isFavorite: boolean, onClick: (e: React.MouseEv
       className="absolute top-2 right-2 p-2 bg-black/40 rounded-full text-white hover:bg-black/60 transition-colors z-10"
       aria-label={isFavorite ? 'Видалити з обраного' : 'Додати в обране'}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} fill={isFavorite ? 'currentColor' : 'none'}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" />
-      </svg>
+      <Icon icon="lucide:heart" className={`h-6 w-6 transition-colors ${isFavorite ? 'fill-current' : ''}`} />
     </button>
   );
 };
