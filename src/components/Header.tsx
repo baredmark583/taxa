@@ -1,5 +1,5 @@
 import React from 'react';
-import { type Page } from '../types';
+import { type Page, type AuthUser } from '../types';
 import { HomeIcon } from './icons/HomeIcon';
 import { UserIcon } from './icons/UserIcon';
 import { ChatIcon } from './icons/ChatIcon';
@@ -9,6 +9,7 @@ interface HeaderProps {
   goBack: () => void;
   navigateTo: (page: Page) => void;
   unreadMessagesCount: number;
+  user: AuthUser | null;
 }
 
 const getPageTitle = (page: Page): string => {
@@ -27,13 +28,15 @@ const getPageTitle = (page: Page): string => {
         return 'Чати';
     case 'admin':
         return 'Адмін Панель';
+    case 'auth':
+        return 'Вхід / Реєстрація'
     default:
       return 'Taxa AI';
   }
 };
 
-const Header: React.FC<HeaderProps> = ({ currentPage, goBack, navigateTo, unreadMessagesCount }) => {
-  const showBackButton = ['create', 'detail', 'profile', 'favorites', 'chats', 'admin'].includes(currentPage);
+const Header: React.FC<HeaderProps> = ({ currentPage, goBack, navigateTo, unreadMessagesCount, user }) => {
+  const showBackButton = ['create', 'detail', 'profile', 'favorites', 'chats', 'admin', 'auth'].includes(currentPage);
   
   return (
     <header className="sticky top-0 z-20 bg-tg-secondary-bg/80 backdrop-blur-md shadow-sm">

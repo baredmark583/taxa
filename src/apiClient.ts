@@ -19,8 +19,8 @@ apiClient.interceptors.request.use(config => {
 });
 
 // --- Auth ---
-export const registerUser = (data: any) => apiClient.post('/api/auth/register', data);
-export const loginUser = (data: any) => apiClient.post('/api/auth/login', data);
+export const registerUser = (data: any): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/register', data);
+export const loginUser = (data: any): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/login', data);
 export const telegramLogin = (initData: string): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/telegram', { initData });
 
 // --- Ads ---

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Ad, AuthUser } from '../types';
+import { Ad, AuthUser, Page } from '../types';
 import { formatPrice, formatRelativeDate } from '../utils/formatters';
 import { ShareIcon } from './icons/ShareIcon';
 
 interface AdDetailViewProps {
   ad: Ad;
-  currentUser: AuthUser;
+  currentUser: AuthUser | null;
+  navigateTo: (page: Page) => void;
 }
 
-const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser }) => {
+const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -45,7 +46,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser }) => {
   };
 
 
-  const isMyAd = ad.seller.id === currentUser.id;
+  const isMyAd = currentUser && ad.seller.id === currentUser.id;
 
   return (
     <div className="pb-24 animate-modal-fade-in">
@@ -92,15 +93,19 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser }) => {
                  <button className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center" disabled>
                     Редагувати
                 </button>
-            ) : (
+            ) : currentUser ? (
                 <>
                 <button className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center" disabled>
                     Написати продавцю
                 </button>
                  <button className="p-3 bg-tg-secondary-bg-hover rounded-lg" disabled>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 016.364 0L12 7.636l1.318-1.318a4.5 4.5 0 016.364 6.364L12 20.364l-7.682-7.682a4.5 4.5 0 010-6.364z" /></svg>
                 </button>
                 </>
+            ) : (
+                 <button onClick={() => navigateTo('auth')} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center">
+                    Увійдіть, щоб написати
+                </button>
             )}
         </div>
         

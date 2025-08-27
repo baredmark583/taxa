@@ -1,7 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { type AuthUser, type User } from './types';
-import { telegramLogin as apiTelegramLogin } from './apiClient';
-import apiClient from './apiClient';
+import { telegramLogin as apiTelegramLogin, loginUser, registerUser } from './apiClient';
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -21,6 +20,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const attemptAutoLogin = async () => {
+      setAuthError(null);
       try {
         // The type for window.Telegram is not available by default, so we use 'any'
         const tg = (window as any).Telegram?.WebApp;
@@ -69,15 +69,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('authUser', JSON.stringify(data.user));
       setUser(authUser);
+      setAuthError(null);
   };
 
   const login = async (credentials: any) => {
-    const { data } = await apiClient.post('/auth/login', credentials);
+    const { data } = await loginUser(credentials);
     handleAuthSuccess(data);
   };
 
   const register = async (credentials: any) => {
-    const { data } = await apiClient.post('/auth/register', credentials);
+    const { data } = await registerUser(credentials);
     handleAuthSuccess(data);
   };
 

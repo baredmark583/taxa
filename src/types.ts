@@ -64,7 +64,7 @@ export interface GeneratedAdData {
   tags: string[];
 }
 
-export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'admin';
+export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'admin' | 'auth';
 
 export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_delivery';
 

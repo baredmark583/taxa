@@ -18,20 +18,21 @@ import AdDetailView from './components/AdDetailView';
 // to work with the new backend API and user system. This is an incremental process.
 
 const App: React.FC = () => {
-  const { user, isLoading: isAuthLoading, logout, authError } = useAuth();
+  const { user, isLoading: isAuthLoading, logout } = useAuth();
   
   const [ads, setAds] = useState<Ad[]>([]);
+  // FIX: Default page is 'home' to allow public browsing.
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // FIX: Data fetching is no longer dependent on the user being logged in.
   const refreshData = useCallback(async (showLoading = false) => {
     try {
       if (showLoading) setIsLoadingData(true);
       setError(null);
-      if (!user) return; // Don't fetch if no user
 
       const response = await getAds();
       setAds(response.data);
@@ -39,26 +40,21 @@ const App: React.FC = () => {
     } catch (err: any) {
       setError('Не вдалося завантажити дані. Спробуйте оновити сторінку.');
       console.error(err);
-      if (err.response?.status === 401) { // Unauthorized
-          logout();
-      }
     } finally {
       if (showLoading) setIsLoadingData(false);
     }
-  }, [user, logout]);
+  }, []);
   
   // Effect for initial data load and deeplinking
   useEffect(() => {
-    if (!user) return;
-
-    const handleDeeplink = async () => {
+    const handleInitialLoad = async () => {
+        setIsLoadingData(true);
         // The type for window.Telegram is not available by default, so we use 'any'
         const tg = (window as any).Telegram?.WebApp;
         const startParam = tg?.initDataUnsafe?.start_param;
 
-        if (startParam) {
+        if (startParam && user) { // Deeplinking only works if user is authenticated via TG
             try {
-                // If there's a start_param, it's an ad ID. Fetch it directly.
                 const response = await getAdById(startParam);
                 setSelectedAd(response.data);
                 setCurrentPage('detail');
@@ -75,16 +71,28 @@ const App: React.FC = () => {
         setIsLoadingData(false);
     };
 
-    handleDeeplink();
-
-  }, [user, refreshData]);
+    // We wait for auth to finish before trying to load data.
+    if (!isAuthLoading) {
+        handleInitialLoad();
+    }
+  }, [isAuthLoading, user, refreshData]);
 
   const showToast = (message: string) => {
     setToastMessage(message);
   };
 
+  // FIX: Navigation to protected routes now checks for auth.
   const navigateTo = (page: Page) => {
-    setCurrentPage(page);
+    const protectedPages: Page[] = ['create', 'profile', 'admin', 'favorites', 'chats'];
+    if (protectedPages.includes(page) && !user) {
+        setCurrentPage('auth');
+    } else {
+        setCurrentPage(page);
+    }
+  };
+  
+  const handleAuthSuccess = () => {
+    navigateTo('home');
   };
 
   const handleCreateAd = (newAd: Ad) => {
@@ -94,55 +102,50 @@ const App: React.FC = () => {
   };
 
   const viewAdDetails = useCallback((ad: Ad) => {
-    // TODO: Implement view count increment on backend
     setSelectedAd(ad);
     navigateTo('detail');
-  }, []);
+  }, [navigateTo]);
 
   const goBack = () => {
+    // If we're on the auth page, go back to home.
+    if (currentPage === 'auth') {
+      navigateTo('home');
+      return;
+    }
     if (['detail', 'create', 'profile', 'favorites', 'chats', 'admin'].includes(currentPage)) {
       navigateTo('home');
       setSelectedAd(null);
     }
   };
-
-  if (isAuthLoading) {
-    return <div className="flex items-center justify-center min-h-screen"><Spinner size="lg" /></div>;
-  }
   
-  if (!user) {
-      return <AuthPage authError={authError} />;
-  }
-
+  // FIX: Rewrote main render logic to always show a shell, and gate content instead of the whole app.
   const renderContent = () => {
-    if (isLoadingData && !selectedAd) { // Don't show skeleton if we have a deeplinked ad
-      return (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <SkeletonAdCard key={index} />
-          ))}
-        </div>
-      );
+    if (isAuthLoading || (isLoadingData && !selectedAd)) {
+        return <div className="flex items-center justify-center min-h-[calc(100vh-100px)]"><Spinner size="lg" /></div>;
     }
 
-    if (error) {
+    if (error && currentPage !== 'auth') {
       return (
         <div className="text-center text-red-400 mt-10">
           <p>{error}</p>
-          <button onClick={() => refreshData(true)} className="mt-4 px-4 py-2 bg-tg-button rounded-lg">Спробувати ще раз</button>
+          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-tg-button rounded-lg">Оновити сторінку</button>
         </div>
       );
     }
 
     switch (currentPage) {
+      case 'auth':
+          return <AuthPage onAuthSuccess={handleAuthSuccess} />;
       case 'create':
-        return <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} />;
+        // FIX: Ensure user exists before rendering protected component.
+        return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} /> : null;
       case 'detail':
-        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} /> : <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
+        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} navigateTo={navigateTo} /> : <p>Оголошення не знайдено. Повернення на головну...</p>;
       case 'profile':
-        return <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} />;
+         // FIX: Ensure user exists before rendering protected component.
+        return user ? <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} /> : null;
       case 'admin':
-        return user.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>Access Denied</p>;
+        return user?.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>Доступ заборонено.</p>;
       case 'home':
       default:
         return <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
@@ -151,11 +154,11 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-tg-bg">
-      <Header currentPage={currentPage} goBack={goBack} navigateTo={navigateTo} unreadMessagesCount={0} />
+      <Header currentPage={currentPage} goBack={goBack} navigateTo={navigateTo} unreadMessagesCount={0} user={user} />
       <main className="p-4">
         {renderContent()}
       </main>
-      <button onClick={logout} className="fixed bottom-4 left-4 bg-red-600/50 text-white p-2 rounded-lg text-xs hover:bg-red-600/80">Вийти</button>
+      {user && <button onClick={logout} className="fixed bottom-4 left-4 bg-red-600/50 text-white p-2 rounded-lg text-xs hover:bg-red-600/80 z-30">Вийти</button>}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
