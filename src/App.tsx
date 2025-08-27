@@ -140,7 +140,7 @@ const App: React.FC = () => {
         // FIX: Ensure user exists before rendering protected component.
         return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} /> : null;
       case 'detail':
-        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} navigateTo={navigateTo} /> : <p>Оголошення не знайдено. Повернення на головну...</p>;
+        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} navigateTo={navigateTo} showToast={showToast} /> : <p>Оголошення не знайдено. Повернення на головну...</p>;
       case 'profile':
          // FIX: Ensure user exists before rendering protected component.
         return user ? <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} /> : null;

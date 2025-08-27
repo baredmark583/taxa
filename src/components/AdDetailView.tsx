@@ -7,9 +7,10 @@ interface AdDetailViewProps {
   ad: Ad;
   currentUser: AuthUser | null;
   navigateTo: (page: Page) => void;
+  showToast: (message: string) => void;
 }
 
-const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo }) => {
+const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo, showToast }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -25,23 +26,39 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
     const botUsername = 'taxaAIbot';
     const directLinkName = 'item';
     const shareUrl = `https://t.me/${botUsername}/${directLinkName}?startapp=${ad.id}`;
-    
-    const shareData = {
+    const tg = (window as any).Telegram?.WebApp;
+
+    // Inside Telegram, navigator.share is unreliable. We default to copying the link.
+    if (tg) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast('Посилання для поширення скопійовано!');
+        if (tg.HapticFeedback?.impactOccurred) {
+          tg.HapticFeedback.impactOccurred('light');
+        }
+      });
+      return;
+    }
+
+    // Outside Telegram, try the Web Share API first.
+    if (navigator.share) {
+      const shareData = {
         title: `Taxa AI: ${ad.title}`,
         text: `Подивіться, що я знайшов на Taxa AI: "${ad.title}" за ${formatPrice(ad.price)}!`,
         url: shareUrl,
-    };
-
-    if (navigator.share) {
-        try {
-            await navigator.share(shareData);
-        } catch (error) {
-            console.error('Error sharing:', error);
+      };
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // Don't show an error if the user just closed the share dialog.
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Share failed:', err);
+          // Fallback to clipboard
+          navigator.clipboard.writeText(shareUrl).then(() => showToast('Посилання скопійовано!'));
         }
+      }
     } else {
-        // Fallback for browsers/clients that don't support navigator.share
-        navigator.clipboard.writeText(shareUrl);
-        alert('Посилання скопійовано в буфер обміну!');
+      // Fallback for browsers without Web Share API.
+      navigator.clipboard.writeText(shareUrl).then(() => showToast('Посилання скопійовано!'));
     }
   };
 
