@@ -46,7 +46,7 @@ export interface Ad {
     telegramUsername?: string; // Kept for legacy compatibility
   };
   status: AdStatus;
-  isBoosted?: boolean;
+  isBoosted: boolean;
    // Optional fields for component compatibility
   stats?: {
     views: number;
@@ -67,6 +67,9 @@ export interface GeneratedAdData {
 export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'admin' | 'auth';
 
 export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_delivery';
+export type UserStatus = 'active' | 'banned';
+export type UserRole = 'USER' | 'ADMIN';
+
 
 export interface Review {
     id: string;
@@ -84,10 +87,31 @@ export interface AdminUser extends User {
     latitude: number | null;
     longitude: number | null;
     city: string | null;
+    status: UserStatus;
 }
 
 export interface AdminAd extends Ad {
     sellerName: string; // From the DB join
+    isBoosted: boolean;
+}
+
+// Add a new type for the admin dashboard statistics.
+export interface AdminStats {
+  totalUsers: number;
+  totalAds: number;
+  adsByCategory: { category: string; count: string }[];
+  soldAds: number;
+  bannedUsers: number;
+}
+
+export interface DailyCount {
+    date: string;
+    count: number;
+}
+
+export interface AnalyticsData {
+    userRegistrations: DailyCount[];
+    adPostings: DailyCount[];
 }
 
 

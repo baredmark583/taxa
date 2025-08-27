@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser } from './types';
+// FIX: Added AdminStats to imports.
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -36,9 +37,14 @@ export const generateAdContent = (prompt: string, imageBase64: string, mimeType:
 }
 
 // --- Admin ---
+// Add a new function to get dashboard statistics.
+export const getAdminStats = (): Promise<{ data: AdminStats }> => apiClient.get('/api/admin/stats');
+export const getAdminAnalytics = (): Promise<{ data: AnalyticsData }> => apiClient.get('/api/admin/analytics');
 export const getAdminUsers = (): Promise<{ data: AdminUser[] }> => apiClient.get('/api/admin/users');
+export const updateAdminUser = (id: string, data: Partial<AdminUser>): Promise<{ data: AdminUser }> => apiClient.put(`/api/admin/users/${id}`, data);
 export const deleteAdminUser = (id: string): Promise<any> => apiClient.delete(`/api/admin/users/${id}`);
 export const getAdminAds = (): Promise<{ data: AdminAd[] }> => apiClient.get('/api/admin/ads');
+export const updateAdminAd = (id: string, data: Partial<AdminAd>): Promise<{ data: AdminAd }> => apiClient.put(`/api/admin/ads/${id}`, data);
 export const deleteAdminAd = (id: string): Promise<any> => apiClient.delete(`/api/admin/ads/${id}`);
 
 
