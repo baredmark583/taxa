@@ -21,40 +21,44 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   useEffect(() => {
     const attemptAutoLogin = async () => {
-        const token = localStorage.getItem('authToken');
-        const userData = localStorage.getItem('authUser');
-        
+      try {
         // The type for window.Telegram is not available by default, so we use 'any'
         const tg = (window as any).Telegram?.WebApp;
+        
+        // FIX: Use a clear if/else block to separate Telegram auth from localStorage fallback.
+        // This prevents a fall-through bug where both could execute.
         if (tg && tg.initData) {
+            // Path 1: User is in the Telegram app context.
             try {
                 const { data } = await apiTelegramLogin(tg.initData);
                 handleAuthSuccess(data);
                 if (tg.ready) tg.ready(); // Inform Telegram the app is ready
-                return;
             } catch (e: any) {
                 console.error("Telegram login failed", e);
                 const errorMessage = e.response?.data?.message === 'Invalid Telegram data' 
                     ? 'Помилка валідації даних Telegram. Спробуйте повністю закрити та знову відкрити додаток.' 
                     : 'Не вдалося увійти через Telegram. Перевірте з\'єднання та спробуйте ще раз.';
                 setAuthError(errorMessage);
-                // Clear any potentially invalid stored data if TG auth fails
-                localStorage.clear();
+                localStorage.clear(); // Clear any potentially invalid stored data
+            }
+        } else {
+            // Path 2: User is not in Telegram, try to use existing token from storage.
+            const token = localStorage.getItem('authToken');
+            const userData = localStorage.getItem('authUser');
+            if (token && userData) {
+                try {
+                    const parsedUser: User = JSON.parse(userData);
+                    setUser({ ...parsedUser, token });
+                } catch (e) {
+                    console.error("Failed to parse user data from storage", e);
+                    localStorage.clear();
+                }
             }
         }
-        
-        // Fallback to existing token in localStorage if not in Telegram
-        else if (token && userData) {
-            try {
-                const parsedUser: User = JSON.parse(userData);
-                setUser({ ...parsedUser, token });
-            } catch (e) {
-                console.error("Failed to parse user data from storage", e);
-                localStorage.clear();
-            }
-        }
-        
+      } finally {
+        // This block guarantees that isLoading is set to false after all login attempts are finished.
         setIsLoading(false);
+      }
     };
     
     attemptAutoLogin();
