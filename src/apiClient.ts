@@ -1,9 +1,12 @@
 import axios from 'axios';
 import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser } from './types';
 
-// The base URL will be handled by Vite's proxy in development or will be a relative path in production.
+// FIX: Use an environment variable for the base URL in production.
+// In development, this will be falsy, and '/api' will be used, which is handled by Vite's proxy.
+// In production (Vercel, Netlify), set VITE_API_BASE_URL to your backend's full URL.
+// FIX: Cast `import.meta` to `any` to bypass TypeScript error about missing `env` property.
 const apiClient = axios.create({
-  baseURL: '/api',
+  baseURL: (import.meta as any).env.VITE_API_BASE_URL || '/api',
 });
 
 // Interceptor to add the auth token to every request
