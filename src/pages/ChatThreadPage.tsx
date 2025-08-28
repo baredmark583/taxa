@@ -3,7 +3,8 @@ import { getMessages, sendMessage } from '../apiClient';
 import { ChatContext, ChatMessage, AuthUser } from '../types';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
-import { formatRelativeDate } from '../utils/formatters';
+import { useI18n } from '../I18nContext';
+
 
 interface ChatThreadPageProps {
     context: ChatContext;
@@ -17,12 +18,15 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
     const [newMessage, setNewMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const ws = useRef<WebSocket | null>(null);
+    const { t } = useI18n();
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
     useEffect(() => {
+        // Fetch initial messages
         const fetchMessages = async () => {
             setIsLoading(true);
             setError(null);
@@ -37,7 +41,57 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
             }
         };
         fetchMessages();
-    }, [context]);
+        
+        // --- WebSocket Setup ---
+        const getWsUrl = () => {
+            const apiUrl = (import.meta as any).env.VITE_API_BASE_URL;
+            if (apiUrl) {
+                const url = new URL(apiUrl);
+                url.protocol = url.protocol === 'https:' ? 'wss' : 'ws';
+                return url.toString();
+            }
+            // For development, connect directly to the backend port.
+            return 'ws://localhost:3001';
+        };
+
+        ws.current = new WebSocket(getWsUrl());
+
+        ws.current.onopen = () => {
+            console.log('WebSocket connected');
+            if (currentUser.token) {
+                ws.current?.send(JSON.stringify({ type: 'auth', token: currentUser.token }));
+            }
+        };
+
+        ws.current.onmessage = (event) => {
+            try {
+                const messageData = JSON.parse(event.data);
+                if (messageData.type === 'new_message') {
+                    const receivedMessage: ChatMessage = messageData.payload;
+                    
+                    const isRelevant = 
+                        receivedMessage.adId === context.adId &&
+                        receivedMessage.senderId === context.participantId &&
+                        receivedMessage.receiverId === currentUser.id;
+
+                    if (isRelevant) {
+                        setMessages(prev => [...prev, receivedMessage]);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to parse WebSocket message:", e);
+            }
+        };
+
+        ws.current.onclose = () => console.log('WebSocket disconnected');
+        ws.current.onerror = (error) => console.error('WebSocket error:', error);
+
+        // Cleanup on component unmount
+        return () => {
+            ws.current?.close();
+        };
+
+    }, [context.adId, context.participantId, currentUser.id, currentUser.token]);
 
     useEffect(() => {
         scrollToBottom();
@@ -62,13 +116,11 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
 
         try {
             const response = await sendMessage(context.adId, context.participantId, newMessage.trim());
-            // Replace optimistic message with the real one from the server
             setMessages(prev => prev.map(msg => msg.id === optimisticMessage.id ? response.data : msg));
         } catch (err) {
             console.error("Failed to send message:", err);
-            // Revert optimistic update
             setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
-            setNewMessage(optimisticMessage.text || ''); // Put text back in input
+            setNewMessage(optimisticMessage.text || ''); // Restore text
             setError("Не вдалося відправити повідомлення.");
         } finally {
             setIsSending(false);
@@ -79,9 +131,9 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
         <div className="flex flex-col h-[calc(100vh-5rem)]">
             <div className="p-2 border-b border-tg-border bg-tg-secondary-bg flex items-center">
                 <img src={context.adImageUrl || 'https://placehold.co/100'} alt={context.adTitle} className="w-12 h-12 rounded-md object-cover"/>
-                <div className="ml-3">
+                <div className="ml-3 overflow-hidden">
                     <p className="font-bold text-sm truncate">{context.adTitle}</p>
-                    <p className="text-xs text-tg-hint">Чат з {context.participantName}</p>
+                    <p className="text-xs text-tg-hint">{t('chatThread.chatWith')} {context.participantName}</p>
                 </div>
             </div>
             
@@ -91,7 +143,7 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
                 {!isLoading && messages.map(msg => (
                     <div key={msg.id} className={`flex items-end gap-2 ${msg.senderId === currentUser.id ? 'justify-end' : 'justify-start'}`}>
                        <div className={`max-w-xs md:max-w-md lg:max-w-lg px-4 py-2 rounded-2xl ${msg.senderId === currentUser.id ? 'bg-tg-button text-tg-button-text rounded-br-none' : 'bg-tg-secondary-bg-hover rounded-bl-none'}`}>
-                            <p className="text-base">{msg.text}</p>
+                            <p className="text-base whitespace-pre-wrap break-words">{msg.text}</p>
                             <p className={`text-xs mt-1 opacity-70 ${msg.senderId === currentUser.id ? 'text-right' : 'text-left'}`}>
                                 {new Date(msg.createdAt).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}
                             </p>
@@ -106,7 +158,7 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
                     type="text"
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Напишіть повідомлення..."
+                    placeholder={t('chatThread.messagePlaceholder')}
                     className="w-full bg-tg-bg p-3 rounded-full border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
                     disabled={isSending}
                 />
