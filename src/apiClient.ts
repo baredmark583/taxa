@@ -26,8 +26,30 @@ export const telegramLogin = (initData: string): Promise<{ data: { token: string
 
 // --- Ads ---
 export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
-export const createAd = (data: { adData: GeneratedAdData, imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.post('/api/ads', data);
-export const updateAd = (adId: string, data: Partial<GeneratedAdData> & { imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.put(`/api/ads/${adId}`, data);
+
+// FIX: Rewritten to use FormData for efficient file uploads instead of base64 strings.
+export const createAd = (data: { adData: GeneratedAdData, images: File[] }): Promise<{ data: Ad }> => {
+    const formData = new FormData();
+    formData.append('adData', JSON.stringify(data.adData));
+    data.images.forEach(imageFile => {
+        // The key 'images' must match what the backend expects (req.files.images)
+        formData.append('images', imageFile);
+    });
+    // Axios will automatically set the correct 'Content-Type: multipart/form-data' header.
+    return apiClient.post('/api/ads', formData);
+};
+
+// FIX: Rewritten to use FormData for efficient file uploads.
+export const updateAd = (adId: string, data: { adData: Partial<GeneratedAdData>, existingImageUrls: string[], newImages: File[] }): Promise<{ data: Ad }> => {
+    const formData = new FormData();
+    const payload = { ...data.adData, existingImageUrls: data.existingImageUrls };
+    formData.append('adData', JSON.stringify(payload));
+    data.newImages.forEach(imageFile => {
+        formData.append('images', imageFile);
+    });
+    return apiClient.put(`/api/ads/${adId}`, formData);
+};
+
 export const updateAdStatus = (adId: string, status: AdStatus): Promise<{ data: Ad }> => apiClient.put(`/api/ads/${adId}/status`, { status });
 // Add a function to get a single ad by ID
 export const getAdById = (id: string): Promise<{ data: Ad }> => apiClient.get(`/api/ads/${id}`);

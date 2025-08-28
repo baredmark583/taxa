@@ -95,21 +95,24 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
     setError(null);
 
     try {
-        // NOTE: In edit mode, we are not handling image changes for simplicity.
-        // A full implementation would require uploading new images and merging URLs.
-        const imageUrls = adToEdit?.imageUrls || imagePreviews.map(p => p.dataUrl); 
-        
-        if (imageUrls.length === 0) {
-            setError('Необхідно додати хоча б одне фото.');
-            setIsPublishing(false);
-            return;
-        }
-
         if (isEditMode && adToEdit) {
-            const response = await updateAd(adToEdit.id, { ...formData, imageUrls });
+            // Edit mode: Send text data and existing image URLs.
+            // Image editing is not yet implemented in this simplified flow.
+            const response = await updateAd(adToEdit.id, {
+                adData: formData,
+                existingImageUrls: adToEdit.imageUrls,
+                newImages: [], // Pass an empty array as we are not handling new image uploads on edit
+            });
             onUpdateAd(response.data);
         } else {
-            const response = await createAd({ adData: formData, imageUrls });
+            // Create mode: Send text data and new image files.
+            const imageFiles = imagePreviews.map(p => p.file);
+            if (imageFiles.length === 0) {
+                setError('Необхідно додати хоча б одне фото.');
+                setIsPublishing(false);
+                return;
+            }
+            const response = await createAd({ adData: formData, images: imageFiles });
             onCreateAd(response.data);
         }
     } catch (err: any) {
