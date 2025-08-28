@@ -56,25 +56,49 @@ const App: React.FC = () => {
   // Fetch initial ads and favorites
   useEffect(() => {
     const loadInitialData = async () => {
-      setIsLoadingData(true);
-      try {
-        const adsResponse = await getAds();
-        setAds(adsResponse.data);
+        setIsLoadingData(true);
+        try {
+            // Check for deep-linked ad from Telegram notification or shared link
+            const tg = (window as any).Telegram?.WebApp;
+            const startParam = tg?.initDataUnsafe?.start_param;
+            const urlParams = new URLSearchParams(window.location.search);
+            const adIdFromUrl = startParam || urlParams.get('adId');
 
-        if (user) {
-          const favsResponse = await getFavoriteAdIds();
-          setFavoriteAdIds(new Set(favsResponse.data));
+            if (adIdFromUrl) {
+                // If there's an ad ID, fetch it and go to detail view
+                const adResponse = await getAdById(adIdFromUrl);
+                setSelectedAd(adResponse.data);
+                setCurrentPage('detail');
+                // Fetch all ads in the background for when the user navigates home
+                getAds().then(res => setAds(res.data));
+            } else {
+                // Otherwise, fetch all ads for the home page
+                const adsResponse = await getAds();
+                setAds(adsResponse.data);
+            }
+
+            if (user) {
+                const favsResponse = await getFavoriteAdIds();
+                setFavoriteAdIds(new Set(favsResponse.data));
+            }
+        } catch (err) {
+            console.error("Error loading initial data:", err);
+            // Fallback to loading all ads if deep-link fails
+            try {
+                const adsResponse = await getAds();
+                setAds(adsResponse.data);
+                setCurrentPage('home');
+            } catch (fallbackErr) {
+                setError(t('errors.failedToLoadData'));
+                console.error("Fallback ad load failed:", fallbackErr);
+            }
+        } finally {
+            setIsLoadingData(false);
         }
-      } catch (err) {
-        setError(t('errors.failedToLoadData'));
-        console.error(err);
-      } finally {
-        setIsLoadingData(false);
-      }
     };
     
     if (!isAuthLoading) {
-      loadInitialData();
+        loadInitialData();
     }
   }, [user, isAuthLoading, t]);
   
@@ -133,6 +157,19 @@ const App: React.FC = () => {
     showToast(t('toast.adPublished'));
   };
 
+  const handleEditAd = (ad: Ad) => {
+    setAdToEdit(ad);
+    navigateTo('create');
+  };
+
+  const handleUpdateAd = (updatedAd: Ad) => {
+    setAds(prevAds => prevAds.map(ad => ad.id === updatedAd.id ? updatedAd : ad));
+    setSelectedAd(updatedAd);
+    setAdToEdit(null);
+    navigateTo('detail');
+    showToast(t('toast.adUpdated'));
+  };
+
   const viewAdDetails = useCallback((ad: Ad) => {
     setSelectedAd(ad);
     navigateTo('detail');
@@ -173,6 +210,7 @@ const App: React.FC = () => {
       navigateTo('home');
       setSelectedAd(null);
       setSelectedSellerId(null);
+      setAdToEdit(null);
     }
     if (currentPage === 'chatThread') {
         navigateTo('chats');
@@ -200,9 +238,9 @@ const App: React.FC = () => {
           return <AuthPage onAuthSuccess={handleAuthSuccess} />;
       case 'create':
         // FIX: Ensure user exists before rendering protected component.
-        return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={adToEdit} showToast={showToast} currentUser={user} /> : null;
+        return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={handleUpdateAd} adToEdit={adToEdit} showToast={showToast} currentUser={user} /> : null;
       case 'detail':
-        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} showToast={showToast} isFavorite={favoriteAdIds.has(selectedAd.id)} onToggleFavorite={handleToggleFavorite} onViewSellerProfile={viewSellerProfile} onStartChat={startChat} /> : <p>{t('errors.adNotFound')}</p>;
+        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} showToast={showToast} isFavorite={favoriteAdIds.has(selectedAd.id)} onToggleFavorite={handleToggleFavorite} onViewSellerProfile={viewSellerProfile} onStartChat={startChat} onEditAd={handleEditAd} /> : <p>{t('errors.adNotFound')}</p>;
       case 'profile':
          // FIX: Ensure user exists before rendering protected component.
         return user ? <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} onUpdateAdStatus={handleUpdateAdStatus}/> : null;

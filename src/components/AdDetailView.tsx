@@ -12,9 +12,10 @@ interface AdDetailViewProps {
   onToggleFavorite: (adId: string) => void;
   onViewSellerProfile: (sellerId: string) => void;
   onStartChat: (ad: Ad) => void;
+  onEditAd: (ad: Ad) => void;
 }
 
-const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast, isFavorite, onToggleFavorite, onViewSellerProfile, onStartChat }) => {
+const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast, isFavorite, onToggleFavorite, onViewSellerProfile, onStartChat, onEditAd }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { t } = useI18n();
 
@@ -111,7 +112,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
         {/* Action Buttons */}
         <div className="flex gap-2">
             {isMyAd ? (
-                 <button onClick={() => showToast(t('common.comingSoon'))} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center disabled:opacity-50" disabled>
+                 <button onClick={() => onEditAd(ad)} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center">
                     {t('adDetail.edit')}
                 </button>
             ) : (

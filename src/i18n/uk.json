@@ -77,6 +77,7 @@
   "toast.statusUpdated": "Статус оновлено на",
   "toast.failedToUpdateStatus": "Не вдалося оновити статус.",
   "toast.adPublished": "Оголошення опубліковано!",
+  "toast.adUpdated": "Оголошення успішно оновлено!",
 
   "errors.failedToLoadAds": "Не вдалося завантажити оголошення.",
   "errors.failedToLoadData": "Не вдалося завантажити дані. Спробуйте оновити сторінку.",

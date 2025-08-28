@@ -77,6 +77,7 @@
   "toast.statusUpdated": "Статус обновлен на",
   "toast.failedToUpdateStatus": "Не удалось обновить статус.",
   "toast.adPublished": "Объявление опубликовано!",
+  "toast.adUpdated": "Объявление успешно обновлено!",
 
   "errors.failedToLoadAds": "Не удалось загрузить объявления.",
   "errors.failedToLoadData": "Не удалось загрузить данные. Попробуйте обновить страницу.",

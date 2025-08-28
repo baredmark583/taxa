@@ -27,6 +27,7 @@ export const telegramLogin = (initData: string): Promise<{ data: { token: string
 // --- Ads ---
 export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
 export const createAd = (data: { adData: GeneratedAdData, imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.post('/api/ads', data);
+export const updateAd = (adId: string, data: Partial<GeneratedAdData> & { imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.put(`/api/ads/${adId}`, data);
 export const updateAdStatus = (adId: string, status: AdStatus): Promise<{ data: Ad }> => apiClient.put(`/api/ads/${adId}/status`, { status });
 // Add a function to get a single ad by ID
 export const getAdById = (id: string): Promise<{ data: Ad }> => apiClient.get(`/api/ads/${id}`);

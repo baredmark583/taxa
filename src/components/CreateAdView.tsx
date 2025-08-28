@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 // FIX: Changed User to AuthUser to match the type provided by useAuth hook.
 import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
-import { generateAdContent, createAd } from '../apiClient';
+import { generateAdContent, createAd, updateAd } from '../apiClient';
 import Spinner from './Spinner';
 
 interface CreateAdViewProps {
@@ -42,15 +42,21 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   const [step, setStep] = useState<WizardStep>(isEditMode ? 'review' : 'upload');
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [userPrompt, setUserPrompt] = useState('');
-  const [generatedData, setGeneratedData] = useState<GeneratedAdData | null>(null);
+  
+  // This state will hold the form data for both create (after generation) and edit flows.
+  const [formData, setFormData] = useState<GeneratedAdData | null>(
+      adToEdit ? {
+          title: adToEdit.title,
+          description: adToEdit.description,
+          category: adToEdit.category,
+          price: adToEdit.price,
+          location: adToEdit.location,
+          tags: adToEdit.tags || [],
+      } : null
+  );
+
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    if (isEditMode && adToEdit) {
-      // Logic to populate fields for editing
-    }
-  }, [isEditMode, adToEdit]);
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -75,7 +81,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
     setError(null);
     try {
       const response = await generateAdContent(userPrompt, primaryImage.base64, primaryImage.file.type);
-      setGeneratedData(response.data);
+      setFormData(response.data);
       setStep('review');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Не вдалося згенерувати оголошення.');
@@ -84,15 +90,14 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   }, [userPrompt, imagePreviews]);
 
   const handleSubmit = async () => {
-    if (!generatedData) return;
+    if (!formData) return;
     setIsPublishing(true);
     setError(null);
 
     try {
-        // NOTE: In a real app, you would upload images to a storage service (like S3)
-        // and get back URLs. For this example, we'll send data URLs, but this is inefficient.
-        // The backend should be prepared to handle base64 data URLs.
-        const imageUrls = imagePreviews.map(p => p.dataUrl); 
+        // NOTE: In edit mode, we are not handling image changes for simplicity.
+        // A full implementation would require uploading new images and merging URLs.
+        const imageUrls = adToEdit?.imageUrls || imagePreviews.map(p => p.dataUrl); 
         
         if (imageUrls.length === 0) {
             setError('Необхідно додати хоча б одне фото.');
@@ -100,10 +105,11 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
             return;
         }
 
-        if (isEditMode) {
-            // TODO: Update logic
+        if (isEditMode && adToEdit) {
+            const response = await updateAd(adToEdit.id, { ...formData, imageUrls });
+            onUpdateAd(response.data);
         } else {
-            const response = await createAd({ adData: generatedData, imageUrls });
+            const response = await createAd({ adData: formData, imageUrls });
             onCreateAd(response.data);
         }
     } catch (err: any) {
@@ -113,7 +119,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   };
   
   const getTitle = () => {
-    if (isEditMode) return "Редагування";
+    if (isEditMode) return "Редагування оголошення";
     if (step === 'upload') return "Розмістити оголошення";
     if (step === 'describe') return "Розкажіть про товар";
     if (step === 'generating') return "AI творить магію...";
@@ -123,13 +129,15 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   return (
     <div className="max-w-md mx-auto bg-tg-secondary-bg p-6 rounded-lg shadow-xl">
         <h2 className="text-2xl font-bold mb-4 text-center">{getTitle()}</h2>
-        {step === 'upload' && (
+        
+        {!isEditMode && step === 'upload' && (
              <label className="cursor-pointer w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center">
                 <span>Вибрати фото</span>
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
             </label>
         )}
-        {step === 'describe' && (
+
+        {!isEditMode && step === 'describe' && (
             <div>
                  <textarea
                     value={userPrompt}
@@ -141,17 +149,19 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
                 <button onClick={handleGenerate} className="mt-4 w-full bg-tg-button p-3 rounded-lg">Створити з AI</button>
             </div>
         )}
-        {step === 'generating' && <div className="text-center"><Spinner/> <p>AI творить магію...</p></div>}
-        {step === 'review' && generatedData && (
-             <div>
-                <input value={generatedData.title} onChange={(e) => setGeneratedData(d => d ? { ...d, title: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" />
-                <textarea value={generatedData.description} onChange={(e) => setGeneratedData(d => d ? { ...d, description: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" rows={5} />
-                <input value={generatedData.price} onChange={(e) => setGeneratedData(d => d ? { ...d, price: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" placeholder="Ціна"/>
-                <input value={generatedData.location} onChange={(e) => setGeneratedData(d => d ? { ...d, location: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" placeholder="Місто"/>
-                <input value={generatedData.category} onChange={(e) => setGeneratedData(d => d ? { ...d, category: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded" placeholder="Категорія"/>
 
-                <button onClick={handleSubmit} disabled={isPublishing} className="mt-4 w-full bg-green-600 p-3 rounded-lg">
-                    {isPublishing ? 'Публікація...' : 'Опублікувати'}
+        {!isEditMode && step === 'generating' && <div className="text-center"><Spinner/> <p>AI творить магію...</p></div>}
+        
+        {step === 'review' && formData && (
+             <div>
+                <input value={formData.title} onChange={(e) => setFormData(d => d ? { ...d, title: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" placeholder="Назва"/>
+                <textarea value={formData.description} onChange={(e) => setFormData(d => d ? { ...d, description: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" rows={5} placeholder="Опис"/>
+                <input value={formData.price} onChange={(e) => setFormData(d => d ? { ...d, price: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" placeholder="Ціна"/>
+                <input value={formData.location} onChange={(e) => setFormData(d => d ? { ...d, location: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" placeholder="Місто"/>
+                <input value={formData.category} onChange={(e) => setFormData(d => d ? { ...d, category: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" placeholder="Категорія"/>
+
+                <button onClick={handleSubmit} disabled={isPublishing} className="mt-4 w-full bg-green-600 p-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50">
+                    {isPublishing ? (isEditMode ? 'Оновлення...' : 'Публікація...') : (isEditMode ? 'Оновити оголошення' : 'Опублікувати')}
                 </button>
             </div>
         )}
