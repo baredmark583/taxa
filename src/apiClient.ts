@@ -66,6 +66,12 @@ export const generateAdContent = (prompt: string, imageBase64: string, mimeType:
     return apiClient.post('/api/gemini/generate-ad', { prompt, imageBase64, mimeType });
 }
 
+// Add a function for image editing.
+export const editImage = (imageBase64: string, mimeType: string, editType: 'background' | 'enhance'): Promise<{ data: { imageBase64: string, mimeType: string } }> => {
+    return apiClient.post('/api/gemini/edit-image', { imageBase64, mimeType, editType });
+}
+
+
 // --- Chat ---
 export const getConversations = (): Promise<{ data: ChatConversation[] }> => apiClient.get('/api/chat/conversations');
 export const getMessages = (adId: string, participantId: string): Promise<{ data: ChatMessage[] }> => apiClient.get(`/api/chat/messages/${adId}/${participantId}`);

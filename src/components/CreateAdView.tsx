@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 // FIX: Changed User to AuthUser to match the type provided by useAuth hook.
 import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
-import { generateAdContent, createAd, updateAd } from '../apiClient';
+// FIX: Added editImage to imports.
+import { generateAdContent, createAd, updateAd, editImage } from '../apiClient';
 import Spinner from './Spinner';
 import { Icon } from '@iconify/react';
 
@@ -14,7 +15,8 @@ interface CreateAdViewProps {
   showToast: (message: string) => void;
 }
 
-type WizardStep = 'upload' | 'describe' | 'generating' | 'review';
+// FIX: Added 'edit' step for image editing.
+type WizardStep = 'upload' | 'edit' | 'describe' | 'generating' | 'review';
 
 export interface ImagePreview {
     id: string;
@@ -36,6 +38,19 @@ const fileToDataUrl = (file: File): Promise<{ dataUrl: string, base64: string }>
   });
 };
 
+// Helper function to convert a base64 string back to a File object.
+const base64ToFile = (base64: string, filename: string, mimeType: string): File => {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    return new File([blob], filename, { type: mimeType });
+};
+
+
 // FIX: Added currentUser to the component's destructured props.
 const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adToEdit, currentUser, showToast }) => {
   const isEditMode = !!adToEdit;
@@ -55,7 +70,9 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
           tags: adToEdit.tags || [],
       } : null
   );
-
+  
+  // Add loading state for image editing.
+  const [isEditingImage, setIsEditingImage] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,6 +101,30 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   const removeImage = (idToRemove: string) => {
     setImagePreviews(prev => prev.filter(p => p.id !== idToRemove));
   };
+
+  const handleImageEdit = async (editType: 'background' | 'enhance') => {
+        const primaryImage = imagePreviews[0];
+        if (!primaryImage) return;
+
+        setIsEditingImage(true);
+        setError(null);
+        try {
+            const { data: editedImageData } = await editImage(primaryImage.base64, primaryImage.file.type, editType);
+            const newFile = base64ToFile(editedImageData.imageBase64, `edited-${primaryImage.file.name}`, editedImageData.mimeType);
+            const { dataUrl, base64 } = await fileToDataUrl(newFile);
+
+            // Replace the first image with the edited version
+            setImagePreviews(prev => [
+                { file: newFile, dataUrl, base64, id: primaryImage.id },
+                ...prev.slice(1)
+            ]);
+            showToast("Зображення успішно відредаговано!");
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Не вдалося відредагувати зображення.');
+        } finally {
+            setIsEditingImage(false);
+        }
+    };
 
 
   const handleGenerate = useCallback(async () => {
@@ -139,6 +180,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   const getTitle = () => {
     if (isEditMode) return "Редагування оголошення";
     if (step === 'upload') return "Завантажте фото";
+    if (step === 'edit') return "Покращити фото з AI";
     if (step === 'describe') return "Розкажіть про товар";
     if (step === 'generating') return "AI творить магію...";
     return "Перевірте оголошення";
@@ -174,8 +216,8 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
                 <input type="file" className="hidden" onChange={handleImageChange} multiple />
             </label>
         ) : (
-            <button 
-                onClick={() => setStep('describe')}
+             <button 
+                onClick={() => setStep('edit')}
                 className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors"
             >
                 Далі
@@ -184,12 +226,52 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
     </div>
 );
 
+ const renderEditStep = () => {
+        const primaryImage = imagePreviews[0];
+        if (!primaryImage) return null;
+
+        return (
+            <div className="space-y-4">
+                <p className="text-center text-sm text-tg-hint">Перше фото буде головним. Застосуйте AI-покращення, щоб зробити його ідеальним.</p>
+                <div className="relative aspect-square w-full max-w-sm mx-auto rounded-lg overflow-hidden">
+                    <img src={primaryImage.dataUrl} alt="Головне фото для редагування" className="w-full h-full object-cover" />
+                    {isEditingImage && (
+                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                            <Spinner size="lg" />
+                            <p className="text-white mt-2">Обробка...</p>
+                        </div>
+                    )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button onClick={() => handleImageEdit('background')} disabled={isEditingImage} className="flex items-center justify-center gap-2 p-3 bg-tg-secondary-bg-hover rounded-lg hover:bg-tg-bg disabled:opacity-50">
+                        <Icon icon="lucide:wand-2" />
+                        <span>Замінити фон на білий</span>
+                    </button>
+                    <button onClick={() => handleImageEdit('enhance')} disabled={isEditingImage} className="flex items-center justify-center gap-2 p-3 bg-tg-secondary-bg-hover rounded-lg hover:bg-tg-bg disabled:opacity-50">
+                        <Icon icon="lucide:sparkles" />
+                        <span>Покращити якість</span>
+                    </button>
+                </div>
+                <button 
+                    onClick={() => setStep('describe')}
+                    className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors"
+                    disabled={isEditingImage}
+                >
+                    Продовжити
+                </button>
+            </div>
+        );
+    };
+
+
 
   return (
     <div className="max-w-md mx-auto bg-tg-secondary-bg p-6 rounded-lg shadow-xl">
         <h2 className="text-2xl font-bold mb-4 text-center">{getTitle()}</h2>
         
         {!isEditMode && step === 'upload' && renderUploadStep()}
+        
+        {!isEditMode && step === 'edit' && renderEditStep()}
 
         {!isEditMode && step === 'describe' && (
             <div>
