@@ -2,18 +2,21 @@ import React, { useState } from 'react';
 import { Ad, AuthUser, Page } from '../types';
 import { formatPrice, formatRelativeDate } from '../utils/formatters';
 import { Icon } from '@iconify/react';
+import { useI18n } from '../I18nContext';
 
 interface AdDetailViewProps {
   ad: Ad;
   currentUser: AuthUser | null;
-  navigateTo: (page: Page) => void;
   showToast: (message: string) => void;
   isFavorite: boolean;
   onToggleFavorite: (adId: string) => void;
+  onViewSellerProfile: (sellerId: string) => void;
+  onStartChat: (ad: Ad) => void;
 }
 
-const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo, showToast, isFavorite, onToggleFavorite }) => {
+const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast, isFavorite, onToggleFavorite, onViewSellerProfile, onStartChat }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { t } = useI18n();
 
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % ad.imageUrls.length);
@@ -28,7 +31,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
     const botUsername = 'taxaAIbot';
     const directLinkName = 'item';
     const shareUrl = `https://t.me/${botUsername}/${directLinkName}?startapp=${ad.id}`;
-    const shareText = `Подивіться, що я знайшов на Taxa AI: "${ad.title}" за ${formatPrice(ad.price)}!`;
+    const shareText = `${t('adDetail.shareText')} "${ad.title}" ${t('adDetail.sharePrice')} ${formatPrice(ad.price)}!`;
     const tg = (window as any).Telegram?.WebApp;
 
     // Inside Telegram, use the native sharing functionality.
@@ -54,12 +57,12 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
         if ((err as Error).name !== 'AbortError') {
           console.error('Share failed:', err);
           // Fallback to clipboard
-          navigator.clipboard.writeText(shareUrl).then(() => showToast('Посилання скопійовано!'));
+          navigator.clipboard.writeText(shareUrl).then(() => showToast(t('toast.linkCopied')));
         }
       }
     } else {
       // Fallback for browsers without Web Share API.
-      navigator.clipboard.writeText(shareUrl).then(() => showToast('Посилання скопійовано!'));
+      navigator.clipboard.writeText(shareUrl).then(() => showToast(t('toast.linkCopied')));
     }
   };
 
@@ -89,7 +92,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
           </>
         ) : (
           <div className="flex items-center justify-center h-full text-tg-hint">
-            Немає фото
+            {t('common.noPhoto')}
           </div>
         )}
          {/* Share button on top of the image */}
@@ -108,28 +111,24 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
         {/* Action Buttons */}
         <div className="flex gap-2">
             {isMyAd ? (
-                 <button className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center" disabled>
-                    Редагувати
+                 <button onClick={() => showToast(t('common.comingSoon'))} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center disabled:opacity-50" disabled>
+                    {t('adDetail.edit')}
                 </button>
-            ) : currentUser ? (
+            ) : (
                 <>
-                <button className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center" disabled>
-                    Написати продавцю
+                <button onClick={() => onStartChat(ad)} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center">
+                    {t('adDetail.writeToSeller')}
                 </button>
                  <button onClick={() => onToggleFavorite(ad.id)} className={`p-3 rounded-lg transition-colors ${isFavorite ? 'bg-red-500/20 text-red-400' : 'bg-tg-secondary-bg-hover'}`}>
                     <Icon icon="lucide:heart" className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
                 </>
-            ) : (
-                 <button onClick={() => navigateTo('auth')} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center">
-                    Увійдіть, щоб написати
-                </button>
             )}
         </div>
         
         {/* Description */}
         <div>
-            <h2 className="text-xl font-semibold mb-2">Опис</h2>
+            <h2 className="text-xl font-semibold mb-2">{t('adDetail.description')}</h2>
             <p className="text-tg-hint whitespace-pre-wrap">{ad.description}</p>
         </div>
 
@@ -148,15 +147,15 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
 
         {/* Ad Info */}
         <div className="text-sm text-tg-hint border-t border-tg-border pt-4 mt-6">
-            <div className="flex justify-between"><span>Категорія:</span> <span className="text-tg-text">{ad.category}</span></div>
-            <div className="flex justify-between mt-1"><span>Місцезнаходження:</span> <span className="text-tg-text">{ad.location}</span></div>
-            <div className="flex justify-between mt-1"><span>Опубліковано:</span> <span className="text-tg-text">{formatRelativeDate(ad.createdAt)}</span></div>
+            <div className="flex justify-between"><span>{t('adDetail.category')}:</span> <span className="text-tg-text">{ad.category}</span></div>
+            <div className="flex justify-between mt-1"><span>{t('adDetail.location')}:</span> <span className="text-tg-text">{ad.location}</span></div>
+            <div className="flex justify-between mt-1"><span>{t('adDetail.published')}:</span> <span className="text-tg-text">{formatRelativeDate(ad.createdAt, t)}</span></div>
         </div>
 
         {/* Seller Info */}
          <div className="border-t border-tg-border pt-4">
-            <h2 className="text-xl font-semibold mb-2">Продавець</h2>
-             <div className="flex items-center space-x-3 bg-tg-secondary-bg p-3 rounded-lg">
+            <h2 className="text-xl font-semibold mb-2">{t('adDetail.seller')}</h2>
+             <button onClick={() => onViewSellerProfile(ad.seller.id)} className="w-full flex items-center space-x-3 bg-tg-secondary-bg p-3 rounded-lg hover:bg-tg-secondary-bg-hover transition-colors text-left">
                  <img
                      src={ad.seller.avatarUrl || `https://i.pravatar.cc/150?u=${ad.seller.id}`}
                      alt={ad.seller.name}
@@ -165,7 +164,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
                  <div>
                      <p className="font-bold text-lg">{ad.seller.name}</p>
                  </div>
-             </div>
+             </button>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
 import { getAds } from '../apiClient';
 import Spinner from './Spinner';
+import { useI18n } from '../I18nContext';
 
 interface HomeViewProps {
   initialAds: Ad[];
@@ -15,8 +16,6 @@ interface HomeViewProps {
 }
 
 type SortBy = 'date' | 'price_asc' | 'price_desc';
-
-const CATEGORIES = ['Все', 'Електроніка', 'Меблі', 'Одяг', 'Транспорт', 'Нерухомість', 'Хобі', 'Дитячі товари', 'Інше'];
 
 const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -31,9 +30,12 @@ const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) =
 
 
 const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+  const { t } = useI18n();
+  const CATEGORIES = useMemo(() => (t('categories').split(',')), [t]);
+  
   const [ads, setAds] = useState<Ad[]>(initialAds);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('Все');
+  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('date');
   
@@ -41,7 +43,9 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
     async (search: string, category: string, sort: SortBy) => {
       setIsLoading(true);
       try {
-        const response = await getAds({ search, category, sortBy: sort });
+        // Use the original "Все" for API call if the translated version is selected
+        const apiCategory = category === t('categories').split(',')[0] ? 'Все' : category;
+        const response = await getAds({ search, category: apiCategory, sortBy: sort });
         setAds(response.data);
       } catch (error) {
         console.error("Failed to fetch ads:", error);
@@ -49,7 +53,7 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
         setIsLoading(false);
       }
     },
-    []
+    [t]
   );
 
   const debouncedFetchAds = useMemo(() => debounce(fetchAds, 300), [fetchAds]);
@@ -76,7 +80,7 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
             type="search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Пошук..."
+            placeholder={t('home.searchPlaceholder')}
             className="w-full bg-tg-secondary-bg p-3 pl-4 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
             />
        </div>
@@ -117,14 +121,14 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
       ) : (
         <div className="text-center text-tg-hint mt-12 flex flex-col items-center">
             <Icon icon="lucide:package-search" className="h-20 w-20 text-tg-border" />
-            <p className="text-lg mt-4">Нічого не знайдено</p>
+            <p className="text-lg mt-4">{t('home.noResults')}</p>
         </div>
       )}
 
       <button 
         onClick={() => navigateTo('create')}
         className="fixed bottom-6 right-6 bg-tg-button text-tg-button-text p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-tg-bg focus:ring-tg-link"
-        aria-label="Створити нове оголошення"
+        aria-label={t('home.createAdButtonLabel')}
       >
         <Icon icon="lucide:plus" className="h-8 w-8" />
       </button>

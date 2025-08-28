@@ -18,40 +18,35 @@ export const formatPrice = (price: string | number): string => {
  * e.g., yesterday -> "вчора"
  * e.g., 2 days ago -> "2 дні тому"
  */
-export const formatRelativeDate = (isoDate: string): string => {
+export const formatRelativeDate = (isoDate: string, t: (key: string) => string): string => {
   const date = new Date(isoDate);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-  if (diffInSeconds < 60) return "щойно";
+  if (diffInSeconds < 60) return t('time.justNow');
 
   const diffInMinutes = Math.floor(diffInSeconds / 60);
-  if (diffInMinutes < 60) return `${diffInMinutes} хв. тому`;
+  if (diffInMinutes < 60) return `${diffInMinutes} ${t('time.minutesAgo')}`;
   
   const diffInHours = Math.floor(diffInMinutes / 60);
   
   // Check if it's today
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (date >= startOfToday) {
-      return `сьогодні о ${date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${t('time.todayAt')} ${date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`;
   }
   
   // Check if it's yesterday
   const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
   if (date >= startOfYesterday) {
-      return `вчора о ${date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`;
+      return `${t('time.yesterdayAt')} ${date.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`;
   }
   
   const diffInDays = Math.floor(diffInHours / 24);
-  if (diffInDays < 7) {
-    const pluralize = (n: number, one: string, few: string, many: string) => {
-        if (n % 10 === 1 && n % 100 !== 11) return one;
-        if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return few;
-        return many;
-    }
-    return `${diffInDays} ${pluralize(diffInDays, 'день', 'дні', 'днів')} тому`;
-  }
+  
+  const months = t('time.months').split(',');
+  const monthName = months[date.getMonth()];
+  const day = date.getDate();
 
-  // Otherwise, return the date
-  return date.toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+  return `${day} ${monthName}`;
 };

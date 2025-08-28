@@ -4,6 +4,7 @@ import { Ad } from '../types';
 import AdCard from '../components/AdCard';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
+import { useI18n } from '../I18nContext';
 
 interface FavoritesPageProps {
     viewAdDetails: (ad: Ad) => void;
@@ -12,6 +13,7 @@ interface FavoritesPageProps {
 }
 
 const FavoritesPage: React.FC<FavoritesPageProps> = ({ viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+    const { t } = useI18n();
     const [favoriteAds, setFavoriteAds] = useState<Ad[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,14 +26,14 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ viewAdDetails, favoriteAd
                 const response = await getFavoriteAds();
                 setFavoriteAds(response.data);
             } catch (err) {
-                setError('Не вдалося завантажити обрані оголошення.');
+                setError(t('errors.failedToLoadFavorites'));
                 console.error(err);
             } finally {
                 setIsLoading(false);
             }
         };
         fetchFavorites();
-    }, [favoriteAdIds]); // Refetch when the set of favorite IDs changes
+    }, [favoriteAdIds, t]); // Refetch when the set of favorite IDs changes
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Spinner size="lg" /></div>;
@@ -58,8 +60,8 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ viewAdDetails, favoriteAd
             ) : (
                 <div className="text-center text-tg-hint mt-12 flex flex-col items-center">
                     <Icon icon="lucide:heart-off" className="h-20 w-20 text-tg-border" />
-                    <p className="text-lg mt-4">Список обраного порожній</p>
-                    <p className="text-sm mt-1">Натисніть на сердечко, щоб додати оголошення.</p>
+                    <p className="text-lg mt-4">{t('favorites.emptyTitle')}</p>
+                    <p className="text-sm mt-1">{t('favorites.emptySubtitle')}</p>
                 </div>
             )}
         </div>

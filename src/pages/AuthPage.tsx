@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
-
+import { useI18n } from '../I18nContext';
 
 interface AuthPageProps {
     onAuthSuccess: () => void;
@@ -10,6 +10,7 @@ interface AuthPageProps {
 
 const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
     const { register, login, authError } = useAuth();
+    const { t } = useI18n();
     const [isLoginView, setIsLoginView] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -32,7 +33,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
             }
             onAuthSuccess();
         } catch (error: any) {
-            setFormError(error.response?.data?.message || 'Сталася неочікувана помилка.');
+            setFormError(error.response?.data?.message || t('errors.unexpectedError'));
         } finally {
             setIsLoading(false);
         }
@@ -49,32 +50,32 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                            <Icon icon="mdi:telegram" className="w-12 h-12 text-[#29B6F6]" />
                         </div>
                         <h2 className="text-2xl font-bold text-tg-text">
-                            Вітаємо у Taxa AI
+                            {t('auth.welcome')}
                         </h2>
                         <p className="text-tg-hint mt-2">
-                            Схоже, щось пішло не так з автоматичним входом через Telegram.
+                           {t('auth.tgLoginProblem')}
                         </p>
                         {authError && (
                             <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg my-4 text-left" role="alert">
-                                <p className="font-bold">Помилка авторизації</p>
+                                <p className="font-bold">{t('auth.authErrorTitle')}</p>
                                 <p className="text-sm">{authError}</p>
                             </div>
                         )}
                         <p className="text-tg-hint text-sm mt-4">
-                           Будь ласка, спробуйте повністю закрити та знову відкрити додаток у Telegram.
+                           {t('auth.tgLoginSuggestion')}
                         </p>
                     </div>
                 ) : (
                     <>
                         <h2 className="text-2xl font-bold text-tg-text text-center">
-                            {isLoginView ? 'Вхід' : 'Реєстрація'}
+                            {isLoginView ? t('auth.loginTitle') : t('auth.registerTitle')}
                         </h2>
                        
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {!isLoginView && (
                                 <input
                                     type="text"
-                                    placeholder="Ваше ім'я"
+                                    placeholder={t('auth.namePlaceholder')}
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
@@ -83,7 +84,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                             )}
                             <input
                                 type="email"
-                                placeholder="Email"
+                                placeholder={t('auth.emailPlaceholder')}
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -91,7 +92,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                             />
                             <input
                                 type="password"
-                                placeholder="Пароль"
+                                placeholder={t('auth.passwordPlaceholder')}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -105,13 +106,13 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                                 disabled={isLoading}
                                 className="w-full flex items-center justify-center px-4 py-3 font-semibold text-tg-button-text bg-tg-button rounded-md hover:bg-opacity-90 transition-transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {isLoading ? <Spinner size="sm" /> : (isLoginView ? 'Увійти' : 'Створити акаунт')}
+                                {isLoading ? <Spinner size="sm" /> : (isLoginView ? t('auth.loginButton') : t('auth.registerButton'))}
                             </button>
                         </form>
                         <p className="text-sm text-tg-hint text-center">
-                            {isLoginView ? 'Немає акаунту?' : 'Вже є акаунт?'}
+                            {isLoginView ? t('auth.noAccount') : t('auth.hasAccount')}
                             <button onClick={() => { setIsLoginView(!isLoginView); setFormError(null); }} className="font-semibold text-tg-link hover:underline ml-1">
-                                {isLoginView ? 'Зареєструватися' : 'Увійти'}
+                                {isLoginView ? t('auth.signUp') : t('auth.signIn')}
                             </button>
                         </p>
                         <div className="relative my-4">
@@ -119,7 +120,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                                 <div className="w-full border-t border-tg-border"></div>
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-tg-secondary-bg text-tg-hint">або</span>
+                                <span className="px-2 bg-tg-secondary-bg text-tg-hint">{t('common.or')}</span>
                             </div>
                         </div>
                         <a
@@ -128,7 +129,7 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                             rel="noopener noreferrer"
                             className="w-full inline-flex items-center justify-center px-4 py-3 font-semibold text-tg-button-text bg-[#29B6F6] rounded-md hover:bg-opacity-90 transition-transform hover:scale-105"
                         >
-                           <Icon icon="mdi:telegram" className="w-6 h-6" /> <span className="ml-2">Увійти через Telegram</span>
+                           <Icon icon="mdi:telegram" className="w-6 h-6" /> <span className="ml-2">{t('auth.loginWithTelegram')}</span>
                         </a>
                     </>
                 )}

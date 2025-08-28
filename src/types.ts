@@ -70,6 +70,9 @@ export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_deliver
 export type UserStatus = 'active' | 'banned';
 export type UserRole = 'USER' | 'ADMIN';
 
+// --- i18n ---
+export type Locale = 'uk' | 'en' | 'ru';
+
 
 export interface Review {
     id: string;
@@ -134,30 +137,42 @@ export interface SecureDealDetails {
 }
 
 
+// --- Chat Types ---
 export interface ChatMessage {
     id: string;
+    text: string | null;
+    imageUrl?: string | null;
     senderId: string;
     receiverId: string;
-    text?: string;
-    imageUrl?: string;
-    timestamp: string; // ISO 8601
+    adId: string;
+    createdAt: string; // ISO 8601
     isRead: boolean;
-    isSystemMessage?: boolean;
-    offerDetails?: OfferDetails;
-    secureDealDetails?: SecureDealDetails;
-    adId?: string; // The ad this message is about
+    // For optimistic UI
+    senderName?: string;
+    senderAvatar?: string;
 }
 
+// Type for the list view
 export interface ChatConversation {
-    id: string; // combination of user IDs and potentially ad ID
-    adId?: string; // The ad this conversation is about
-    participant: {
-        id: string;
-        name: string;
-        avatarUrl?: string;
-    };
-    lastMessage: ChatMessage;
-    unreadCount: number;
+    adId: string;
+    adTitle: string;
+    adImageUrls: string[];
+    participantId: string;
+    participantName: string;
+    participantAvatarUrl?: string;
+    lastMessageText: string;
+    lastMessageAt: string;
+    isRead: boolean;
+    senderId: string; // ID of the user who sent the last message
+}
+
+// Context needed to open a chat thread
+export interface ChatContext {
+    adId: string;
+    adTitle: string;
+    adImageUrl?: string;
+    participantId: string;
+    participantName: string;
 }
 
 

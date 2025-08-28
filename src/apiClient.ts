@@ -1,6 +1,6 @@
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -25,7 +25,7 @@ export const loginUser = (data: any): Promise<{ data: { token: string, user: Aut
 export const telegramLogin = (initData: string): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/telegram', { initData });
 
 // --- Ads ---
-export const getAds = (params: { search?: string, category?: string, sortBy?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
+export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
 export const createAd = (data: { adData: GeneratedAdData, imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.post('/api/ads', data);
 export const updateAdStatus = (adId: string, status: AdStatus): Promise<{ data: Ad }> => apiClient.put(`/api/ads/${adId}/status`, { status });
 // Add a function to get a single ad by ID
@@ -42,6 +42,12 @@ export const removeFavorite = (adId: string): Promise<any> => apiClient.delete(`
 export const generateAdContent = (prompt: string, imageBase64: string, mimeType: string): Promise<{ data: GeneratedAdData }> => {
     return apiClient.post('/api/gemini/generate-ad', { prompt, imageBase64, mimeType });
 }
+
+// --- Chat ---
+export const getConversations = (): Promise<{ data: ChatConversation[] }> => apiClient.get('/api/chat/conversations');
+export const getMessages = (adId: string, participantId: string): Promise<{ data: ChatMessage[] }> => apiClient.get(`/api/chat/messages/${adId}/${participantId}`);
+export const sendMessage = (adId: string, receiverId: string, text: string): Promise<{ data: ChatMessage }> => apiClient.post('/api/chat/messages', { adId, receiverId, text });
+
 
 // --- Admin ---
 // Add a new function to get dashboard statistics.

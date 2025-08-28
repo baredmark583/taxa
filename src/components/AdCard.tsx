@@ -2,6 +2,7 @@ import React from 'react';
 import { type Ad, type AdStatus } from '../types';
 import { formatPrice } from '../utils/formatters';
 import { Icon } from '@iconify/react';
+import { useI18n } from '../I18nContext';
 
 interface AdCardProps {
   ad: Ad;
@@ -11,24 +12,20 @@ interface AdCardProps {
 }
 
 const StatusBadge: React.FC<{ status: AdStatus }> = ({ status }) => {
+    const { t } = useI18n();
     if (status === 'active' || status === 'in_delivery') return null;
 
-    const styles = {
+    const styles: Record<string, string> = {
         reserved: 'bg-yellow-500/80',
         sold: 'bg-gray-600/80',
         archived: 'bg-blue-500/80'
     };
-    const text = {
-        reserved: 'В резерві',
-        sold: 'Продано',
-        archived: 'В архіві'
-    }
-
+    
     const currentStatus = status as keyof typeof styles;
 
     return (
         <div className={`absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded ${styles[currentStatus]}`}>
-            {text[currentStatus]}
+            {t(`adStatus.${status}`)}
         </div>
     )
 }
@@ -40,11 +37,12 @@ const BoostBadge: React.FC = () => (
 );
 
 const FavoriteButton: React.FC<{ isFavorite: boolean, onClick: (e: React.MouseEvent) => void }> = ({ isFavorite, onClick }) => {
+  const { t } = useI18n();
   return (
     <button 
       onClick={onClick}
       className="absolute top-2 right-2 p-2 bg-black/40 rounded-full text-white hover:bg-black/60 transition-colors z-10"
-      aria-label={isFavorite ? 'Видалити з обраного' : 'Додати в обране'}
+      aria-label={isFavorite ? t('adCard.removeFromFavorites') : t('adCard.addToFavorites')}
     >
       <Icon icon="lucide:heart" className={`h-6 w-6 transition-colors ${isFavorite ? 'fill-current' : ''}`} />
     </button>
@@ -52,13 +50,14 @@ const FavoriteButton: React.FC<{ isFavorite: boolean, onClick: (e: React.MouseEv
 };
 
 const AdCard: React.FC<AdCardProps> = ({ ad, onClick, isFavorite, onToggleFavorite }) => {
+  const { t } = useI18n();
   
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     onToggleFavorite(ad.id);
   };
   
-  const imageUrl = ad.imageUrls && ad.imageUrls.length > 0 ? ad.imageUrls[0] : 'https://placehold.co/400x300/18222d/b1c3d5?text=Немає+фото';
+  const imageUrl = ad.imageUrls && ad.imageUrls.length > 0 ? ad.imageUrls[0] : `https://placehold.co/400x300/18222d/b1c3d5?text=${encodeURIComponent(t('common.noPhoto'))}`;
 
   return (
     <div 

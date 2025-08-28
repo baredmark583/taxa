@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { type Ad, type Page, type AuthUser } from './types';
+import { type Ad, type Page, type AuthUser, ChatContext } from './types';
 // FIX: Added getAdById to imports.
 import { getAds, getAdById, getFavoriteAdIds, addFavorite, removeFavorite, updateAdStatus } from './apiClient';
 import { useAuth } from './AuthContext';
@@ -14,17 +14,25 @@ import Toast from './components/Toast';
 import Spinner from './components/Spinner';
 import AdDetailView from './components/AdDetailView';
 import FavoritesPage from './pages/FavoritesPage';
+import SellerProfilePage from './pages/SellerProfilePage';
+import ChatListPage from './pages/ChatListPage';
+import ChatThreadPage from './pages/ChatThreadPage';
+import { useI18n } from './I18nContext';
 
 // Note: Many components are temporarily disabled as they need to be refactored
 // to work with the new backend API and user system. This is an incremental process.
 
 const App: React.FC = () => {
   const { user, isLoading: isAuthLoading, logout } = useAuth();
+  const { t } = useI18n();
   
   const [ads, setAds] = useState<Ad[]>([]);
   // FIX: Default page is 'home' to allow public browsing.
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
+  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
+  const [chatContext, setChatContext] = useState<ChatContext | null>(null);
+  const [adToEdit, setAdToEdit] = useState<Ad | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -41,9 +49,9 @@ const App: React.FC = () => {
       const response = await getAds();
       setAds(response.data);
     } catch (err) {
-      setError('Не вдалося завантажити оголошення.');
+      setError(t('errors.failedToLoadAds'));
     }
-  }, []);
+  }, [t]);
 
   // Fetch initial ads and favorites
   useEffect(() => {
@@ -58,7 +66,7 @@ const App: React.FC = () => {
           setFavoriteAdIds(new Set(favsResponse.data));
         }
       } catch (err) {
-        setError('Не вдалося завантажити дані. Спробуйте оновити сторінку.');
+        setError(t('errors.failedToLoadData'));
         console.error(err);
       } finally {
         setIsLoadingData(false);
@@ -68,7 +76,7 @@ const App: React.FC = () => {
     if (!isAuthLoading) {
       loadInitialData();
     }
-  }, [user, isAuthLoading]);
+  }, [user, isAuthLoading, t]);
   
   const handleToggleFavorite = useCallback(async (adId: string) => {
     if (!user) {
@@ -80,33 +88,33 @@ const App: React.FC = () => {
         if (newFavorites.has(adId)) {
             await removeFavorite(adId);
             newFavorites.delete(adId);
-            showToast('Видалено з обраного');
+            showToast(t('toast.removedFromFavorites'));
         } else {
             await addFavorite(adId);
             newFavorites.add(adId);
-            showToast('Додано в обране');
+            showToast(t('toast.addedToFavorites'));
         }
         setFavoriteAdIds(newFavorites);
     } catch (error) {
-        showToast('Не вдалося оновити обране.');
+        showToast(t('toast.failedToUpdateFavorites'));
         console.error("Favorite toggle failed:", error);
     }
-  }, [user, favoriteAdIds]);
+  }, [user, favoriteAdIds, t]);
 
   const handleUpdateAdStatus = useCallback(async (adId: string, status: Ad['status']) => {
     try {
         const { data: updatedAd } = await updateAdStatus(adId, status);
         setAds(prevAds => prevAds.map(ad => ad.id === adId ? updatedAd : ad));
-        showToast(`Статус оновлено на "${status}"`);
+        showToast(`${t('toast.statusUpdated')} "${t(`adStatus.${status}`)}"`);
     } catch (error) {
-        showToast('Не вдалося оновити статус.');
+        showToast(t('toast.failedToUpdateStatus'));
         console.error("Status update failed:", error);
     }
-  }, []);
+  }, [t]);
 
   // FIX: Navigation to protected routes now checks for auth.
   const navigateTo = (page: Page) => {
-    const protectedPages: Page[] = ['create', 'profile', 'admin', 'favorites', 'chats'];
+    const protectedPages: Page[] = ['create', 'profile', 'admin', 'favorites', 'chats', 'chatThread'];
     if (protectedPages.includes(page) && !user) {
         setCurrentPage('auth');
     } else {
@@ -122,13 +130,38 @@ const App: React.FC = () => {
   const handleCreateAd = (newAd: Ad) => {
     setAds(prevAds => [newAd, ...prevAds]);
     navigateTo('home');
-    showToast('Оголошення опубліковано!');
+    showToast(t('toast.adPublished'));
   };
 
   const viewAdDetails = useCallback((ad: Ad) => {
     setSelectedAd(ad);
     navigateTo('detail');
   }, []);
+  
+  const viewSellerProfile = (sellerId: string) => {
+    setSelectedSellerId(sellerId);
+    navigateTo('sellerProfile');
+  };
+
+  const startChat = (ad: Ad) => {
+      if (!user) {
+          navigateTo('auth');
+          return;
+      }
+      setChatContext({
+          adId: ad.id,
+          adTitle: ad.title,
+          adImageUrl: ad.imageUrls[0],
+          participantId: ad.seller.id,
+          participantName: ad.seller.name
+      });
+      navigateTo('chatThread');
+  };
+
+  const viewChat = (context: ChatContext) => {
+    setChatContext(context);
+    navigateTo('chatThread');
+  }
 
   const goBack = () => {
     // If we're on the auth page, go back to home.
@@ -136,9 +169,14 @@ const App: React.FC = () => {
       navigateTo('home');
       return;
     }
-    if (['detail', 'create', 'profile', 'favorites', 'chats', 'admin'].includes(currentPage)) {
+    if (['detail', 'create', 'profile', 'favorites', 'chats', 'admin', 'sellerProfile'].includes(currentPage)) {
       navigateTo('home');
       setSelectedAd(null);
+      setSelectedSellerId(null);
+    }
+    if (currentPage === 'chatThread') {
+        navigateTo('chats');
+        setChatContext(null);
     }
   };
   
@@ -152,7 +190,7 @@ const App: React.FC = () => {
       return (
         <div className="text-center text-red-400 mt-10">
           <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-tg-button rounded-lg">Оновити сторінку</button>
+          <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-tg-button rounded-lg">{t('common.reloadPage')}</button>
         </div>
       );
     }
@@ -162,16 +200,22 @@ const App: React.FC = () => {
           return <AuthPage onAuthSuccess={handleAuthSuccess} />;
       case 'create':
         // FIX: Ensure user exists before rendering protected component.
-        return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} /> : null;
+        return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={adToEdit} showToast={showToast} currentUser={user} /> : null;
       case 'detail':
-        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} navigateTo={navigateTo} showToast={showToast} isFavorite={favoriteAdIds.has(selectedAd.id)} onToggleFavorite={handleToggleFavorite} /> : <p>Оголошення не знайдено. Повернення на головну...</p>;
+        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} showToast={showToast} isFavorite={favoriteAdIds.has(selectedAd.id)} onToggleFavorite={handleToggleFavorite} onViewSellerProfile={viewSellerProfile} onStartChat={startChat} /> : <p>{t('errors.adNotFound')}</p>;
       case 'profile':
          // FIX: Ensure user exists before rendering protected component.
         return user ? <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} onUpdateAdStatus={handleUpdateAdStatus}/> : null;
       case 'favorites':
         return user ? <FavoritesPage viewAdDetails={viewAdDetails} favoriteAdIds={favoriteAdIds} onToggleFavorite={handleToggleFavorite} /> : null;
+      case 'sellerProfile':
+        return selectedSellerId ? <SellerProfilePage sellerId={selectedSellerId} viewAdDetails={viewAdDetails} favoriteAdIds={favoriteAdIds} onToggleFavorite={handleToggleFavorite} /> : <p>{t('errors.sellerNotFound')}</p>;
+      case 'chats':
+        return user ? <ChatListPage onViewChat={viewChat} /> : null;
+      case 'chatThread':
+        return user && chatContext ? <ChatThreadPage context={chatContext} currentUser={user} /> : <p>{t('errors.chatNotFound')}</p>;
       case 'admin':
-        return user?.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>Доступ заборонено.</p>;
+        return user?.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>{t('errors.accessDenied')}</p>;
       case 'home':
       default:
         return <HomeView initialAds={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={favoriteAdIds} onToggleFavorite={handleToggleFavorite} showToast={showToast} />;
@@ -184,7 +228,7 @@ const App: React.FC = () => {
       <main className="p-4">
         {renderContent()}
       </main>
-      {user && <button onClick={logout} className="fixed bottom-4 left-4 bg-red-600/50 text-white p-2 rounded-lg text-xs hover:bg-red-600/80 z-30">Вийти</button>}
+      {user && <button onClick={logout} className="fixed bottom-4 left-4 bg-red-600/50 text-white p-2 rounded-lg text-xs hover:bg-red-600/80 z-30">{t('common.logout')}</button>}
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
