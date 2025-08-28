@@ -3,6 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { type Ad, type GeneratedAdData, type AuthUser } from '../types';
 import { generateAdContent, createAd, updateAd } from '../apiClient';
 import Spinner from './Spinner';
+import { Icon } from '@iconify/react';
 
 interface CreateAdViewProps {
   onCreateAd: (newAd: Ad) => void;
@@ -63,15 +64,27 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
     if (files && files.length > 0) {
         const newPreviews: ImagePreview[] = [];
         for (const file of Array.from(files)) {
+            // Simple validation for file type and size (e.g., 10MB)
+            if (!file.type.startsWith('image/')) {
+                showToast(`Файл ${file.name} не є зображенням.`);
+                continue;
+            }
+            if (file.size > 10 * 1024 * 1024) {
+                 showToast(`Зображення ${file.name} завелике (більше 10МБ).`);
+                continue;
+            }
             const { dataUrl, base64 } = await fileToDataUrl(file);
             newPreviews.push({ file, dataUrl, base64, id: `${Date.now()}-${file.name}` });
         }
         setImagePreviews(prev => [...prev, ...newPreviews]);
-        setStep('describe');
     }
-    // FIX: Reset input value to allow selecting the same file again, which is crucial for mobile.
     event.target.value = '';
   };
+
+  const removeImage = (idToRemove: string) => {
+    setImagePreviews(prev => prev.filter(p => p.id !== idToRemove));
+  };
+
 
   const handleGenerate = useCallback(async () => {
     const primaryImage = imagePreviews[0];
@@ -125,37 +138,73 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
   
   const getTitle = () => {
     if (isEditMode) return "Редагування оголошення";
-    if (step === 'upload') return "Розмістити оголошення";
+    if (step === 'upload') return "Завантажте фото";
     if (step === 'describe') return "Розкажіть про товар";
     if (step === 'generating') return "AI творить магію...";
     return "Перевірте оголошення";
   };
+  
+  const renderUploadStep = () => (
+    <div>
+        {imagePreviews.length > 0 && (
+            <div className="mb-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {imagePreviews.map((preview) => (
+                        <div key={preview.id} className="relative aspect-square">
+                            <img src={preview.dataUrl} alt="Preview" className="w-full h-full object-cover rounded-lg"/>
+                            <button onClick={() => removeImage(preview.id)} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full p-0.5">
+                                <Icon icon="lucide:x" className="h-4 w-4" />
+                            </button>
+                        </div>
+                    ))}
+                     <label className="cursor-pointer aspect-square flex flex-col items-center justify-center bg-tg-bg border-2 border-dashed border-tg-border rounded-lg hover:bg-tg-secondary-bg-hover">
+                        <Icon icon="lucide:plus" className="h-8 w-8 text-tg-hint" />
+                        <span className="text-xs text-tg-hint mt-1">Додати</span>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
+                    </label>
+                </div>
+            </div>
+        )}
+
+        {imagePreviews.length === 0 ? (
+            <label className="cursor-pointer w-full h-40 bg-tg-bg border-2 border-dashed border-tg-border rounded-lg flex flex-col items-center justify-center hover:bg-tg-secondary-bg-hover">
+                <Icon icon="lucide:upload-cloud" className="h-10 w-10 text-tg-hint" />
+                <span className="mt-2 font-semibold">Натисніть для завантаження</span>
+                <span className="text-xs text-tg-hint mt-1">PNG, JPG, WEBP до 10МБ</span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
+            </label>
+        ) : (
+            <button 
+                onClick={() => setStep('describe')}
+                className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors"
+            >
+                Далі
+            </button>
+        )}
+    </div>
+);
+
 
   return (
     <div className="max-w-md mx-auto bg-tg-secondary-bg p-6 rounded-lg shadow-xl">
         <h2 className="text-2xl font-bold mb-4 text-center">{getTitle()}</h2>
         
-        {!isEditMode && step === 'upload' && (
-             <label className="cursor-pointer w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center">
-                <span>Вибрати фото</span>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
-            </label>
-        )}
+        {!isEditMode && step === 'upload' && renderUploadStep()}
 
         {!isEditMode && step === 'describe' && (
             <div>
                  <textarea
                     value={userPrompt}
                     onChange={(e) => setUserPrompt(e.target.value)}
-                    placeholder="Опис товару..."
-                    className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border"
+                    placeholder="Наприклад: 'Продаю майже новий червоний велосипед, у відмінному стані, є кілька подряпин на рамі'"
+                    className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
                     rows={4}
                 />
-                <button onClick={handleGenerate} className="mt-4 w-full bg-tg-button p-3 rounded-lg">Створити з AI</button>
+                <button onClick={handleGenerate} className="mt-4 w-full bg-tg-button p-3 rounded-lg text-tg-button-text font-bold hover:bg-opacity-90">Створити з AI</button>
             </div>
         )}
 
-        {!isEditMode && step === 'generating' && <div className="text-center"><Spinner/> <p>AI творить магію...</p></div>}
+        {!isEditMode && step === 'generating' && <div className="text-center py-8"><Spinner size="lg"/> <p className="mt-4 text-tg-hint">Аналізуємо фото та опис...</p></div>}
         
         {step === 'review' && formData && (
              <div>
@@ -165,7 +214,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
                 <input value={formData.location} onChange={(e) => setFormData(d => d ? { ...d, location: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" placeholder="Місто"/>
                 <input value={formData.category} onChange={(e) => setFormData(d => d ? { ...d, category: e.target.value } : null)} className="w-full bg-tg-bg p-2 mb-2 rounded border border-tg-border" placeholder="Категорія"/>
 
-                <button onClick={handleSubmit} disabled={isPublishing} className="mt-4 w-full bg-green-600 p-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50">
+                <button onClick={handleSubmit} disabled={isPublishing} className="mt-4 w-full bg-green-600 p-3 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 text-white font-bold">
                     {isPublishing ? (isEditMode ? 'Оновлення...' : 'Публікація...') : (isEditMode ? 'Оновити оголошення' : 'Опублікувати')}
                 </button>
             </div>
