@@ -60,7 +60,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
 
   const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
+    if (files && files.length > 0) {
         const newPreviews: ImagePreview[] = [];
         for (const file of Array.from(files)) {
             const { dataUrl, base64 } = await fileToDataUrl(file);
@@ -69,6 +69,8 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
         setImagePreviews(prev => [...prev, ...newPreviews]);
         setStep('describe');
     }
+    // FIX: Reset input value to allow selecting the same file again, which is crucial for mobile.
+    event.target.value = '';
   };
 
   const handleGenerate = useCallback(async () => {
