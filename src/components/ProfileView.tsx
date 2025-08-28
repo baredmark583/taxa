@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { type Ad, type Page, type AuthUser } from '../types';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { type Ad, type Page, type AuthUser, AdStatus } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
 
@@ -9,6 +9,7 @@ interface ProfileViewProps {
   viewAdDetails: (ad: Ad) => void;
   navigateTo: (page: Page) => void;
   currentUser: AuthUser;
+  onUpdateAdStatus: (adId: string, status: AdStatus) => void;
 }
 
 const ProfileButton: React.FC<{
@@ -27,8 +28,43 @@ const ProfileButton: React.FC<{
     </button>
 );
 
+const AdManagementDropdown: React.FC<{ ad: Ad, onUpdateStatus: (adId: string, status: AdStatus) => void }> = ({ ad, onUpdateStatus }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
-const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateTo, currentUser }) => {
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleStatusChange = (status: AdStatus) => {
+        onUpdateStatus(ad.id, status);
+        setIsOpen(false);
+    }
+
+    return (
+        <div ref={dropdownRef} className="absolute top-2 right-2 z-10">
+            <button onClick={() => setIsOpen(!isOpen)} className="p-2 bg-black/40 rounded-full text-white hover:bg-black/60">
+                <Icon icon="lucide:more-vertical" className="h-5 w-5" />
+            </button>
+            {isOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-tg-secondary-bg-hover rounded-md shadow-lg py-1">
+                    {ad.status !== 'sold' && <button onClick={() => handleStatusChange('sold')} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">Позначити як продано</button>}
+                    {ad.status !== 'archived' && <button onClick={() => handleStatusChange('archived')} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">В архів</button>}
+                    {ad.status !== 'active' && <button onClick={() => handleStatusChange('active')} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">Активувати</button>}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateTo, currentUser, onUpdateAdStatus }) => {
 
   const myAds = useMemo(() => {
     return ads.filter(ad => ad.sellerId === currentUser.id);
@@ -46,9 +82,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
       
       <div className="space-y-2 mb-8">
           <ProfileButton
-              onClick={() => alert('Coming soon!')} // navigateTo('favorites')
+              onClick={() => navigateTo('favorites')}
               label="Обране"
-              disabled={true}
               icon={<Icon icon="lucide:heart" className="h-6 w-6 text-tg-hint" />}
           />
           <ProfileButton
@@ -71,13 +106,15 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
       {myAds.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {myAds.map((ad) => (
-            <AdCard 
-              key={ad.id} 
-              ad={ad} 
-              onClick={() => viewAdDetails(ad)} 
-              isFavorite={false} // TODO: Implement favorites
-              onToggleFavorite={() => {}} // TODO: Implement favorites
-            />
+            <div key={ad.id} className="relative">
+                <AdCard 
+                  ad={ad} 
+                  onClick={() => viewAdDetails(ad)} 
+                  isFavorite={false} // Favorites are not relevant for own ads
+                  onToggleFavorite={() => {}} 
+                />
+                <AdManagementDropdown ad={ad} onUpdateStatus={onUpdateAdStatus} />
+            </div>
           ))}
         </div>
       ) : (

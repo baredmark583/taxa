@@ -8,9 +8,11 @@ interface AdDetailViewProps {
   currentUser: AuthUser | null;
   navigateTo: (page: Page) => void;
   showToast: (message: string) => void;
+  isFavorite: boolean;
+  onToggleFavorite: (adId: string) => void;
 }
 
-const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo, showToast }) => {
+const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo, showToast, isFavorite, onToggleFavorite }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const nextImage = () => {
@@ -114,8 +116,8 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, navigateTo
                 <button className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center" disabled>
                     Написати продавцю
                 </button>
-                 <button className="p-3 bg-tg-secondary-bg-hover rounded-lg" disabled>
-                    <Icon icon="lucide:heart" className="h-6 w-6" />
+                 <button onClick={() => onToggleFavorite(ad.id)} className={`p-3 rounded-lg transition-colors ${isFavorite ? 'bg-red-500/20 text-red-400' : 'bg-tg-secondary-bg-hover'}`}>
+                    <Icon icon="lucide:heart" className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
                 </>
             ) : (

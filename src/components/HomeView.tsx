@@ -1,57 +1,73 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { type Ad, type Page } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
+import { getAds } from '../apiClient';
+import Spinner from './Spinner';
 
 interface HomeViewProps {
-  ads: Ad[];
+  initialAds: Ad[];
   navigateTo: (page: Page) => void;
   viewAdDetails: (ad: Ad) => void;
   favoriteAdIds: Set<string>;
   onToggleFavorite: (adId: string) => void;
   showToast: (message: string) => void;
-  // FIX: Removed legacy props that are no longer used by this component.
 }
 
 type SortBy = 'date' | 'price_asc' | 'price_desc';
 
-const CATEGORIES = ['Все', 'Електроніка', 'Меблі', 'Одяг', 'Хобі', 'Інше'];
+const CATEGORIES = ['Все', 'Електроніка', 'Меблі', 'Одяг', 'Транспорт', 'Нерухомість', 'Хобі', 'Дитячі товари', 'Інше'];
 
-// FIX: Removed unused props from component signature.
-const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    return (...args: Parameters<F>): Promise<ReturnType<F>> =>
+        new Promise(resolve => {
+            if (timeout) {
+                clearTimeout(timeout);
+            }
+            timeout = setTimeout(() => resolve(func(...args)), waitFor);
+        });
+};
+
+
+const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+  const [ads, setAds] = useState<Ad[]>(initialAds);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('Все');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('date');
   
-  const filteredAndSortedAds = useMemo(() => {
-    let result = ads;
+  const fetchAds = useCallback(
+    async (search: string, category: string, sort: SortBy) => {
+      setIsLoading(true);
+      try {
+        const response = await getAds({ search, category, sortBy: sort });
+        setAds(response.data);
+      } catch (error) {
+        console.error("Failed to fetch ads:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
 
-    if (selectedCategory !== 'Все') {
-      result = result.filter(ad => ad.category === selectedCategory);
+  const debouncedFetchAds = useMemo(() => debounce(fetchAds, 300), [fetchAds]);
+
+  useEffect(() => {
+    // Debounce for search query, but apply immediately for category/sort changes.
+    if (searchQuery) {
+        debouncedFetchAds(searchQuery, selectedCategory, sortBy);
+    } else {
+        fetchAds(searchQuery, selectedCategory, sortBy);
     }
+  }, [searchQuery, selectedCategory, sortBy, fetchAds, debouncedFetchAds]);
 
-    if (searchQuery.trim()) {
-        const lowercasedQuery = searchQuery.toLowerCase();
-        result = result.filter(ad => 
-            ad.title.toLowerCase().includes(lowercasedQuery) ||
-            ad.description.toLowerCase().includes(lowercasedQuery)
-        );
-    }
-    
-    const sortedResult = [...result];
-    sortedResult.sort((a, b) => {
-        if (a.isBoosted && !b.isBoosted) return -1;
-        if (!a.isBoosted && b.isBoosted) return 1;
+  const sortedAds = useMemo(() => {
+    // isBoosted sorting is now done on the backend, so we just display the result.
+    return ads;
+  }, [ads]);
 
-        switch (sortBy) {
-            case 'price_asc': return parseInt(a.price, 10) - parseInt(b.price, 10);
-            case 'price_desc': return parseInt(b.price, 10) - parseInt(a.price, 10);
-            case 'date': default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-        }
-    });
-
-    return sortedResult;
-  }, [ads, selectedCategory, searchQuery, sortBy]);
 
   return (
     <div>
@@ -82,9 +98,13 @@ const HomeView: React.FC<HomeViewProps> = ({ ads, navigateTo, viewAdDetails, fav
             </div>
         </div>
 
-      {filteredAndSortedAds.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Spinner size="lg" />
+        </div>
+      ) : sortedAds.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
-          {filteredAndSortedAds.map((ad) => (
+          {sortedAds.map((ad) => (
             <AdCard 
               key={ad.id} 
               ad={ad} 

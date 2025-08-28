@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { type Ad, type Page, type AuthUser } from './types';
 // FIX: Added getAdById to imports.
-import { getAds, getAdById } from './apiClient';
+import { getAds, getAdById, getFavoriteAdIds, addFavorite, removeFavorite, updateAdStatus } from './apiClient';
 import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
 import AdminPage from './pages/AdminPage';
@@ -13,6 +13,7 @@ import SkeletonAdCard from './components/SkeletonAdCard';
 import Toast from './components/Toast';
 import Spinner from './components/Spinner';
 import AdDetailView from './components/AdDetailView';
+import FavoritesPage from './pages/FavoritesPage';
 
 // Note: Many components are temporarily disabled as they need to be refactored
 // to work with the new backend API and user system. This is an incremental process.
@@ -27,59 +28,81 @@ const App: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // FIX: Data fetching is no longer dependent on the user being logged in.
-  const refreshData = useCallback(async (showLoading = false) => {
-    try {
-      if (showLoading) setIsLoadingData(true);
-      setError(null);
-
-      const response = await getAds();
-      setAds(response.data);
-
-    } catch (err: any) {
-      setError('Не вдалося завантажити дані. Спробуйте оновити сторінку.');
-      console.error(err);
-    } finally {
-      if (showLoading) setIsLoadingData(false);
-    }
-  }, []);
-  
-  // Effect for initial data load and deeplinking
-  useEffect(() => {
-    const handleInitialLoad = async () => {
-        setIsLoadingData(true);
-        // The type for window.Telegram is not available by default, so we use 'any'
-        const tg = (window as any).Telegram?.WebApp;
-        const startParam = tg?.initDataUnsafe?.start_param;
-
-        if (startParam && user) { // Deeplinking only works if user is authenticated via TG
-            try {
-                const response = await getAdById(startParam);
-                setSelectedAd(response.data);
-                setCurrentPage('detail');
-                await refreshData(false); // Also load other ads in the background
-            } catch (err) {
-                console.error("Failed to load deeplinked ad:", err);
-                setError(`Не вдалося знайти оголошення (ID: ${startParam}).`);
-                await refreshData(true); // Load main list if deeplink fails
-            }
-        } else {
-            // No deeplink, just load all ads
-            await refreshData(true);
-        }
-        setIsLoadingData(false);
-    };
-
-    // We wait for auth to finish before trying to load data.
-    if (!isAuthLoading) {
-        handleInitialLoad();
-    }
-  }, [isAuthLoading, user, refreshData]);
+  const [favoriteAdIds, setFavoriteAdIds] = useState<Set<string>>(new Set());
 
   const showToast = (message: string) => {
     setToastMessage(message);
   };
+  
+  const refreshAds = useCallback(async () => {
+    // This function will now be called by HomeView, not here.
+    // Keeping it for potential global refresh.
+    try {
+      const response = await getAds();
+      setAds(response.data);
+    } catch (err) {
+      setError('Не вдалося завантажити оголошення.');
+    }
+  }, []);
+
+  // Fetch initial ads and favorites
+  useEffect(() => {
+    const loadInitialData = async () => {
+      setIsLoadingData(true);
+      try {
+        const adsResponse = await getAds();
+        setAds(adsResponse.data);
+
+        if (user) {
+          const favsResponse = await getFavoriteAdIds();
+          setFavoriteAdIds(new Set(favsResponse.data));
+        }
+      } catch (err) {
+        setError('Не вдалося завантажити дані. Спробуйте оновити сторінку.');
+        console.error(err);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+    
+    if (!isAuthLoading) {
+      loadInitialData();
+    }
+  }, [user, isAuthLoading]);
+  
+  const handleToggleFavorite = useCallback(async (adId: string) => {
+    if (!user) {
+        navigateTo('auth');
+        return;
+    }
+    const newFavorites = new Set(favoriteAdIds);
+    try {
+        if (newFavorites.has(adId)) {
+            await removeFavorite(adId);
+            newFavorites.delete(adId);
+            showToast('Видалено з обраного');
+        } else {
+            await addFavorite(adId);
+            newFavorites.add(adId);
+            showToast('Додано в обране');
+        }
+        setFavoriteAdIds(newFavorites);
+    } catch (error) {
+        showToast('Не вдалося оновити обране.');
+        console.error("Favorite toggle failed:", error);
+    }
+  }, [user, favoriteAdIds]);
+
+  const handleUpdateAdStatus = useCallback(async (adId: string, status: Ad['status']) => {
+    try {
+        const { data: updatedAd } = await updateAdStatus(adId, status);
+        setAds(prevAds => prevAds.map(ad => ad.id === adId ? updatedAd : ad));
+        showToast(`Статус оновлено на "${status}"`);
+    } catch (error) {
+        showToast('Не вдалося оновити статус.');
+        console.error("Status update failed:", error);
+    }
+  }, []);
 
   // FIX: Navigation to protected routes now checks for auth.
   const navigateTo = (page: Page) => {
@@ -91,8 +114,9 @@ const App: React.FC = () => {
     }
   };
   
-  const handleAuthSuccess = () => {
+  const handleAuthSuccess = async () => {
     navigateTo('home');
+    // We fetch favorites via the useEffect that listens to `user`
   };
 
   const handleCreateAd = (newAd: Ad) => {
@@ -104,7 +128,7 @@ const App: React.FC = () => {
   const viewAdDetails = useCallback((ad: Ad) => {
     setSelectedAd(ad);
     navigateTo('detail');
-  }, [navigateTo]);
+  }, []);
 
   const goBack = () => {
     // If we're on the auth page, go back to home.
@@ -120,7 +144,7 @@ const App: React.FC = () => {
   
   // FIX: Rewrote main render logic to always show a shell, and gate content instead of the whole app.
   const renderContent = () => {
-    if (isAuthLoading || (isLoadingData && !selectedAd)) {
+    if (isAuthLoading || isLoadingData) {
         return <div className="flex items-center justify-center min-h-[calc(100vh-100px)]"><Spinner size="lg" /></div>;
     }
 
@@ -140,15 +164,17 @@ const App: React.FC = () => {
         // FIX: Ensure user exists before rendering protected component.
         return user ? <CreateAdView onCreateAd={handleCreateAd} onUpdateAd={() => {}} adToEdit={null} showToast={showToast} currentUser={user} /> : null;
       case 'detail':
-        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} navigateTo={navigateTo} showToast={showToast} /> : <p>Оголошення не знайдено. Повернення на головну...</p>;
+        return selectedAd ? <AdDetailView ad={selectedAd} currentUser={user} navigateTo={navigateTo} showToast={showToast} isFavorite={favoriteAdIds.has(selectedAd.id)} onToggleFavorite={handleToggleFavorite} /> : <p>Оголошення не знайдено. Повернення на головну...</p>;
       case 'profile':
          // FIX: Ensure user exists before rendering protected component.
-        return user ? <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} /> : null;
+        return user ? <ProfileView ads={ads} viewAdDetails={viewAdDetails} navigateTo={navigateTo} currentUser={user} onUpdateAdStatus={handleUpdateAdStatus}/> : null;
+      case 'favorites':
+        return user ? <FavoritesPage viewAdDetails={viewAdDetails} favoriteAdIds={favoriteAdIds} onToggleFavorite={handleToggleFavorite} /> : null;
       case 'admin':
         return user?.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>Доступ заборонено.</p>;
       case 'home':
       default:
-        return <HomeView ads={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={new Set()} onToggleFavorite={() => {}} showToast={showToast} />;
+        return <HomeView initialAds={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={favoriteAdIds} onToggleFavorite={handleToggleFavorite} showToast={showToast} />;
     }
   };
 

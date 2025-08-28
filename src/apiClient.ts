@@ -1,6 +1,6 @@
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -25,11 +25,18 @@ export const loginUser = (data: any): Promise<{ data: { token: string, user: Aut
 export const telegramLogin = (initData: string): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/telegram', { initData });
 
 // --- Ads ---
-export const getAds = (): Promise<{ data: Ad[] }> => apiClient.get('/api/ads');
+export const getAds = (params: { search?: string, category?: string, sortBy?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
 export const createAd = (data: { adData: GeneratedAdData, imageUrls: string[] }): Promise<{ data: Ad }> => apiClient.post('/api/ads', data);
+export const updateAdStatus = (adId: string, status: AdStatus): Promise<{ data: Ad }> => apiClient.put(`/api/ads/${adId}/status`, { status });
 // Add a function to get a single ad by ID
 export const getAdById = (id: string): Promise<{ data: Ad }> => apiClient.get(`/api/ads/${id}`);
 
+
+// --- User ---
+export const getFavoriteAdIds = (): Promise<{ data: string[] }> => apiClient.get('/api/user/me/favorites/ids');
+export const getFavoriteAds = (): Promise<{ data: Ad[] }> => apiClient.get('/api/user/me/favorites');
+export const addFavorite = (adId: string): Promise<any> => apiClient.post(`/api/user/me/favorites/${adId}`);
+export const removeFavorite = (adId: string): Promise<any> => apiClient.delete(`/api/user/me/favorites/${adId}`);
 
 // --- Gemini ---
 export const generateAdContent = (prompt: string, imageBase64: string, mimeType: string): Promise<{ data: GeneratedAdData }> => {
