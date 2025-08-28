@@ -160,7 +160,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
                      <label className="cursor-pointer aspect-square flex flex-col items-center justify-center bg-tg-bg border-2 border-dashed border-tg-border rounded-lg hover:bg-tg-secondary-bg-hover">
                         <Icon icon="lucide:plus" className="h-8 w-8 text-tg-hint" />
                         <span className="text-xs text-tg-hint mt-1">Додати</span>
-                        <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
+                        <input type="file" className="hidden" onChange={handleImageChange} multiple />
                     </label>
                 </div>
             </div>
@@ -171,7 +171,7 @@ const CreateAdView: React.FC<CreateAdViewProps> = ({ onCreateAd, onUpdateAd, adT
                 <Icon icon="lucide:upload-cloud" className="h-10 w-10 text-tg-hint" />
                 <span className="mt-2 font-semibold">Натисніть для завантаження</span>
                 <span className="text-xs text-tg-hint mt-1">PNG, JPG, WEBP до 10МБ</span>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} multiple />
+                <input type="file" className="hidden" onChange={handleImageChange} multiple />
             </label>
         ) : (
             <button 
