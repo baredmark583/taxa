@@ -1,6 +1,6 @@
 import React from 'react';
 import { type Ad, type AdStatus } from '../types';
-import { formatPrice } from '../utils/formatters';
+import { formatPrice, resolveImageUrl } from '../utils/formatters';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
 
@@ -57,7 +57,9 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick, isFavorite, onToggleFavori
     onToggleFavorite(ad.id);
   };
   
-  const imageUrl = ad.imageUrls && ad.imageUrls.length > 0 ? ad.imageUrls[0] : `https://placehold.co/400x300/18222d/b1c3d5?text=${encodeURIComponent(t('common.noPhoto'))}`;
+  const imageUrl = ad.imageUrls && ad.imageUrls.length > 0
+    ? resolveImageUrl(ad.imageUrls[0])
+    : `https://placehold.co/400x300/18222d/b1c3d5?text=${encodeURIComponent(t('common.noPhoto'))}`;
 
   return (
     <div 

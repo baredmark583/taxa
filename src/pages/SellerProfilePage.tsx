@@ -5,6 +5,7 @@ import AdCard from '../components/AdCard';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
+import { resolveImageUrl } from '../utils/formatters';
 
 interface SellerProfilePageProps {
     sellerId: string;
@@ -56,7 +57,7 @@ const SellerProfilePage: React.FC<SellerProfilePageProps> = ({ sellerId, viewAdD
         <div>
             {sellerInfo && (
                  <div className="flex flex-col items-center mb-8">
-                    <img src={sellerInfo.avatarUrl || `https://i.pravatar.cc/150?u=${sellerId}`} alt="Seller Avatar" className="w-24 h-24 rounded-full mb-4 object-cover border-2 border-tg-border" />
+                    <img src={resolveImageUrl(sellerInfo.avatarUrl || `https://i.pravatar.cc/150?u=${sellerId}`)} alt="Seller Avatar" className="w-24 h-24 rounded-full mb-4 object-cover border-2 border-tg-border" />
                     <h2 className="text-2xl font-bold">{sellerInfo.name}</h2>
                 </div>
             )}

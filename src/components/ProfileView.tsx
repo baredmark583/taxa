@@ -3,6 +3,7 @@ import { type Ad, type Page, type AuthUser, AdStatus } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
+import { resolveImageUrl } from '../utils/formatters';
 
 
 interface ProfileViewProps {
@@ -73,7 +74,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
     return ads.filter(ad => ad.sellerId === currentUser.id);
   }, [ads, currentUser]);
   
-  const userAvatar = currentUser?.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser?.id || 'default'}`;
+  const userAvatar = resolveImageUrl(currentUser?.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser?.id || 'default'}`);
 
   return (
     <div>

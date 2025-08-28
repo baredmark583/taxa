@@ -3,7 +3,7 @@ import { getConversations } from '../apiClient';
 import { ChatConversation, ChatContext } from '../types';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
-import { formatRelativeDate } from '../utils/formatters';
+import { formatRelativeDate, resolveImageUrl } from '../utils/formatters';
 // FIX: Passed the translation function `t` to `formatRelativeDate` to fix a missing argument error.
 import { useI18n } from '../I18nContext';
 
@@ -62,7 +62,7 @@ const ChatListPage: React.FC<ChatListPageProps> = ({ onViewChat }) => {
                         className="w-full flex items-center p-3 bg-tg-secondary-bg rounded-lg hover:bg-tg-secondary-bg-hover transition-colors text-left"
                     >
                         <img 
-                            src={convo.participantAvatarUrl || `https://i.pravatar.cc/150?u=${convo.participantId}`} 
+                            src={resolveImageUrl(convo.participantAvatarUrl || `https://i.pravatar.cc/150?u=${convo.participantId}`)} 
                             alt={convo.participantName}
                             className="w-14 h-14 rounded-full object-cover flex-shrink-0"
                         />

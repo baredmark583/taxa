@@ -1,3 +1,32 @@
+
+const VITE_API_BASE_URL = (import.meta as any).env.VITE_API_BASE_URL || '';
+
+/**
+ * Resolves an image URL. If the URL is relative (starts with '/'),
+ * it prepends the backend base URL. Absolute URLs are returned as is.
+ * @param url The image URL to resolve.
+ * @returns The absolute URL for the image.
+ */
+export const resolveImageUrl = (url: string | undefined | null): string => {
+    if (!url) {
+        // Return a transparent pixel to avoid broken image icons
+        return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    }
+    // If the URL is already absolute or a data URL, return it as is.
+    if (url.startsWith('http') || url.startsWith('data:')) {
+        return url;
+    }
+    // If it's a relative path (like /uploads/...), prepend the backend URL.
+    if (url.startsWith('/')) {
+        // VITE_API_BASE_URL might have a trailing slash, so we should handle that.
+        const baseUrl = VITE_API_BASE_URL.endsWith('/') ? VITE_API_BASE_URL.slice(0, -1) : VITE_API_BASE_URL;
+        return `${baseUrl}${url}`;
+    }
+    // Otherwise, return it as is.
+    return url;
+};
+
+
 /**
  * Formats a numeric string or number into a currency string with spaces and a hryvnia sign.
  * e.g., "15000" -> "15 000 ₴"

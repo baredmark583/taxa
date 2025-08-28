@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Ad, AuthUser, Page } from '../types';
-import { formatPrice, formatRelativeDate } from '../utils/formatters';
+import { formatPrice, formatRelativeDate, resolveImageUrl } from '../utils/formatters';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
 
@@ -76,7 +76,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
       <div className="relative w-full aspect-square bg-tg-secondary-bg rounded-lg overflow-hidden">
         {ad.imageUrls.length > 0 ? (
           <>
-            <img src={ad.imageUrls[currentImageIndex]} alt={ad.title} className="w-full h-full object-contain" />
+            <img src={resolveImageUrl(ad.imageUrls[currentImageIndex])} alt={ad.title} className="w-full h-full object-contain" />
             {ad.imageUrls.length > 1 && (
               <>
                 <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
@@ -158,7 +158,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
             <h2 className="text-xl font-semibold mb-2">{t('adDetail.seller')}</h2>
              <button onClick={() => onViewSellerProfile(ad.seller.id)} className="w-full flex items-center space-x-3 bg-tg-secondary-bg p-3 rounded-lg hover:bg-tg-secondary-bg-hover transition-colors text-left">
                  <img
-                     src={ad.seller.avatarUrl || `https://i.pravatar.cc/150?u=${ad.seller.id}`}
+                     src={resolveImageUrl(ad.seller.avatarUrl || `https://i.pravatar.cc/150?u=${ad.seller.id}`)}
                      alt={ad.seller.name}
                      className="w-12 h-12 rounded-full object-cover"
                  />

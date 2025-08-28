@@ -4,6 +4,7 @@ import { ChatContext, ChatMessage, AuthUser } from '../types';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
+import { resolveImageUrl } from '../utils/formatters';
 
 
 interface ChatThreadPageProps {
@@ -130,7 +131,7 @@ const ChatThreadPage: React.FC<ChatThreadPageProps> = ({ context, currentUser })
     return (
         <div className="flex flex-col h-[calc(100vh-5rem)]">
             <div className="p-2 border-b border-tg-border bg-tg-secondary-bg flex items-center">
-                <img src={context.adImageUrl || 'https://placehold.co/100'} alt={context.adTitle} className="w-12 h-12 rounded-md object-cover"/>
+                <img src={resolveImageUrl(context.adImageUrl || 'https://placehold.co/100')} alt={context.adTitle} className="w-12 h-12 rounded-md object-cover"/>
                 <div className="ml-3 overflow-hidden">
                     <p className="font-bold text-sm truncate">{context.adTitle}</p>
                     <p className="text-xs text-tg-hint">{t('chatThread.chatWith')} {context.participantName}</p>
