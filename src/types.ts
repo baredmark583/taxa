@@ -117,6 +117,17 @@ export interface AnalyticsData {
     adPostings: DailyCount[];
 }
 
+export interface StorageSettings {
+  storage_provider: 'local' | 's3' | 'gcs';
+  s3_bucket: string;
+  s3_region: string;
+  s3_access_key_id: string;
+  s3_secret_access_key: string; // Will be placeholder '********' or new value
+  gcs_bucket: string;
+  gcs_project_id: string;
+  gcs_credentials: string; // Will be placeholder '********' or new value
+}
+
 
 export interface NewReviewPayload {
     sellerId: string;

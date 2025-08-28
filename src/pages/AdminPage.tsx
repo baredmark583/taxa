@@ -5,9 +5,10 @@ import Spinner from '../components/Spinner';
 import UserMap from './UserMap';
 import DashboardView from './admin/DashboardView';
 import AnalyticsView from './admin/AnalyticsView';
+import SettingsView from './admin/SettingsView';
 import { Icon } from '@iconify/react';
 
-type AdminView = 'dashboard' | 'users' | 'ads' | 'map' | 'analytics';
+type AdminView = 'dashboard' | 'users' | 'ads' | 'map' | 'analytics' | 'settings';
 
 interface AdminPageProps {
     showToast: (message: string) => void;
@@ -158,6 +159,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                 return stats ? <DashboardView stats={stats} /> : null;
             case 'analytics':
                 return analytics ? <AnalyticsView analyticsData={analytics} /> : null;
+            case 'settings':
+                return <SettingsView showToast={showToast} />;
             case 'users':
                 return (
                     <div>
@@ -225,6 +228,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                     <button onClick={() => setView('users')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'users' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Користувачі</button>
                      <button onClick={() => setView('ads')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'ads' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Оголошення</button>
                      <button onClick={() => setView('map')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'map' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Карта</button>
+                     <button onClick={() => setView('settings')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'settings' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Налаштування</button>
                 </div>
                  <button onClick={() => fetchData(false)} className="p-2 rounded-full hover:bg-tg-secondary-bg-hover" title="Refresh Data"><Icon icon="lucide:refresh-cw" className={`h-5 w-5 ${isLoading ? 'animate-spin' : ''}`} /></button>
             </div>

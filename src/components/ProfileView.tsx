@@ -99,7 +99,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
              <ProfileButton
                 onClick={() => navigateTo('admin')}
                 label={t('profile.adminPanel')}
-                icon={<Icon icon="lucide:key-round" className="h-6 w-6 text-tg-hint" />}
+                icon={<Icon icon="lucide:shield-check" className="h-6 w-6 text-tg-hint" />}
             />
            )}
       </div>

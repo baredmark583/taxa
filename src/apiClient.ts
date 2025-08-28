@@ -1,6 +1,6 @@
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -82,6 +82,8 @@ export const deleteAdminUser = (id: string): Promise<any> => apiClient.delete(`/
 export const getAdminAds = (): Promise<{ data: AdminAd[] }> => apiClient.get('/api/admin/ads');
 export const updateAdminAd = (id: string, data: Partial<AdminAd>): Promise<{ data: AdminAd }> => apiClient.put(`/api/admin/ads/${id}`, data);
 export const deleteAdminAd = (id: string): Promise<any> => apiClient.delete(`/api/admin/ads/${id}`);
+export const getAdminSettings = (): Promise<{ data: StorageSettings }> => apiClient.get('/api/admin/settings');
+export const updateAdminSettings = (settings: Partial<StorageSettings>): Promise<{ data: { message: string } }> => apiClient.put('/api/admin/settings', settings);
 
 
 // ... other API functions will be added here as we migrate them ...
