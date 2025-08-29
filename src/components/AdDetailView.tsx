@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Ad, AuthUser, Page } from '../types';
+import { Ad, AuthUser } from '../types';
 import { formatPrice, formatRelativeDate, resolveImageUrl } from '../utils/formatters';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
+import { useAppContext } from '../AppContext';
 
 interface AdDetailViewProps {
   ad: Ad;
@@ -18,6 +19,7 @@ interface AdDetailViewProps {
 const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast, isFavorite, onToggleFavorite, onViewSellerProfile, onStartChat, onEditAd }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { t } = useI18n();
+  const { isWeb } = useAppContext();
 
   const nextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex + 1) % ad.imageUrls.length);
@@ -28,14 +30,12 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
   };
 
   const handleShare = async () => {
-    // IMPORTANT: Replace 'taxaAIbot' with your bot's username, and 'item' with the direct link name from BotFather.
     const botUsername = 'taxaAIbot';
     const directLinkName = 'item';
     const shareUrl = `https://t.me/${botUsername}/${directLinkName}?startapp=${ad.id}`;
     const shareText = `${t('adDetail.shareText')} "${ad.title}" ${t('adDetail.sharePrice')} ${formatPrice(ad.price)}!`;
     const tg = (window as any).Telegram?.WebApp;
 
-    // Inside Telegram, use the native sharing functionality.
     if (tg) {
         const telegramShareUrl = new URL('https://t.me/share/url');
         telegramShareUrl.searchParams.set('url', shareUrl);
@@ -44,25 +44,15 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
         return;
     }
 
-    // Outside Telegram, try the Web Share API first.
     if (navigator.share) {
-      const shareData = {
-        title: `Taxa AI: ${ad.title}`,
-        text: shareText,
-        url: shareUrl,
-      };
       try {
-        await navigator.share(shareData);
+        await navigator.share({ title: `Taxa AI: ${ad.title}`, text: shareText, url: shareUrl });
       } catch (err) {
-        // Don't show an error if the user just closed the share dialog.
         if ((err as Error).name !== 'AbortError') {
-          console.error('Share failed:', err);
-          // Fallback to clipboard
           navigator.clipboard.writeText(shareUrl).then(() => showToast(t('toast.linkCopied')));
         }
       }
     } else {
-      // Fallback for browsers without Web Share API.
       navigator.clipboard.writeText(shareUrl).then(() => showToast(t('toast.linkCopied')));
     }
   };
@@ -70,46 +60,42 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
 
   const isMyAd = currentUser && ad.seller.id === currentUser.id;
 
-  return (
-    <div className="pb-24 animate-modal-fade-in">
-      {/* Image Gallery */}
-      <div className="relative w-full aspect-square bg-tg-secondary-bg rounded-lg overflow-hidden">
-        {ad.imageUrls.length > 0 ? (
-          <>
-            <img src={resolveImageUrl(ad.imageUrls[currentImageIndex])} alt={ad.title} className="w-full h-full object-contain" />
-            {ad.imageUrls.length > 1 && (
-              <>
-                <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                  &#10094;
-                </button>
-                <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                  &#10095;
-                </button>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-                  {currentImageIndex + 1} / {ad.imageUrls.length}
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full text-tg-hint">
-            {t('common.noPhoto')}
-          </div>
-        )}
-         {/* Share button on top of the image */}
-        <button onClick={handleShare} className="absolute top-2 right-2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-            <Icon icon="lucide:share-2" className="h-6 w-6" />
-        </button>
-      </div>
+  const ImageGallery = () => (
+    <div className={`relative w-full aspect-square bg-tg-secondary-bg rounded-lg overflow-hidden ${isWeb ? 'sticky top-24' : ''}`}>
+      {ad.imageUrls.length > 0 ? (
+        <>
+          <img src={resolveImageUrl(ad.imageUrls[currentImageIndex])} alt={ad.title} className="w-full h-full object-contain" />
+          {ad.imageUrls.length > 1 && (
+            <>
+              <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+                &#10094;
+              </button>
+              <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+                &#10095;
+              </button>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                {currentImageIndex + 1} / {ad.imageUrls.length}
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <div className="flex items-center justify-center h-full text-tg-hint">
+          {t('common.noPhoto')}
+        </div>
+      )}
+      <button onClick={handleShare} className="absolute top-2 right-2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
+          <Icon icon="lucide:share-2" className="h-6 w-6" />
+      </button>
+    </div>
+  );
 
-      <div className="p-4 space-y-4">
-        {/* Title and Price */}
+  const AdInfo = () => (
+    <div className={`${isWeb ? '' : 'p-4'} space-y-4`}>
         <div>
           <h1 className="text-2xl font-bold">{ad.title}</h1>
           <p className="text-3xl font-bold mt-2 text-tg-link">{formatPrice(ad.price)}</p>
         </div>
-
-        {/* Action Buttons */}
         <div className="flex gap-2">
             {isMyAd ? (
                  <button onClick={() => onEditAd(ad)} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center">
@@ -126,14 +112,10 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
                 </>
             )}
         </div>
-        
-        {/* Description */}
         <div>
             <h2 className="text-xl font-semibold mb-2">{t('adDetail.description')}</h2>
             <p className="text-tg-hint whitespace-pre-wrap">{ad.description}</p>
         </div>
-
-        {/* Tags */}
         {ad.tags && ad.tags.length > 0 && (
             <div>
                 <div className="flex flex-wrap gap-2">
@@ -145,15 +127,11 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
                 </div>
             </div>
         )}
-
-        {/* Ad Info */}
         <div className="text-sm text-tg-hint border-t border-tg-border pt-4 mt-6">
             <div className="flex justify-between"><span>{t('adDetail.category')}:</span> <span className="text-tg-text">{ad.category}</span></div>
             <div className="flex justify-between mt-1"><span>{t('adDetail.location')}:</span> <span className="text-tg-text">{ad.location}</span></div>
             <div className="flex justify-between mt-1"><span>{t('adDetail.published')}:</span> <span className="text-tg-text">{formatRelativeDate(ad.createdAt, t)}</span></div>
         </div>
-
-        {/* Seller Info */}
          <div className="border-t border-tg-border pt-4">
             <h2 className="text-xl font-semibold mb-2">{t('adDetail.seller')}</h2>
              <button onClick={() => onViewSellerProfile(ad.seller.id)} className="w-full flex items-center space-x-3 bg-tg-secondary-bg p-3 rounded-lg hover:bg-tg-secondary-bg-hover transition-colors text-left">
@@ -168,6 +146,26 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
              </button>
         </div>
       </div>
+  );
+
+  if (isWeb) {
+      return (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 xl:gap-12 animate-modal-fade-in">
+              <div className="lg:col-span-3">
+                  <ImageGallery />
+              </div>
+              <div className="lg:col-span-2">
+                  <AdInfo />
+              </div>
+          </div>
+      );
+  }
+
+  // Mobile View
+  return (
+    <div className="pb-24 animate-modal-fade-in">
+      <ImageGallery />
+      <AdInfo />
     </div>
   );
 };

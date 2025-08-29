@@ -5,6 +5,8 @@ import { Icon } from '@iconify/react';
 import { getAds } from '../apiClient';
 import Spinner from './Spinner';
 import { useI18n } from '../I18nContext';
+import { useAppContext } from '../AppContext';
+import Sidebar from './web/Sidebar';
 
 interface HomeViewProps {
   initialAds: Ad[];
@@ -31,6 +33,7 @@ const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) =
 
 const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
   const { t } = useI18n();
+  const { isWeb } = useAppContext();
   const CATEGORIES = useMemo(() => (t('categories').split(',')), [t]);
   
   const [ads, setAds] = useState<Ad[]>(initialAds);
@@ -43,7 +46,6 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
     async (search: string, category: string, sort: SortBy) => {
       setIsLoading(true);
       try {
-        // Use the original "Все" for API call if the translated version is selected
         const apiCategory = category === t('categories').split(',')[0] ? 'Все' : category;
         const response = await getAds({ search, category: apiCategory, sortBy: sort });
         setAds(response.data);
@@ -59,7 +61,6 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
   const debouncedFetchAds = useMemo(() => debounce(fetchAds, 300), [fetchAds]);
 
   useEffect(() => {
-    // Debounce for search query, but apply immediately for category/sort changes.
     if (searchQuery) {
         debouncedFetchAds(searchQuery, selectedCategory, sortBy);
     } else {
@@ -68,11 +69,47 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
   }, [searchQuery, selectedCategory, sortBy, fetchAds, debouncedFetchAds]);
 
   const sortedAds = useMemo(() => {
-    // isBoosted sorting is now done on the backend, so we just display the result.
     return ads;
   }, [ads]);
 
+  // Web view layout
+  if (isWeb) {
+      return (
+          <div className="flex gap-8">
+              <Sidebar 
+                  categories={CATEGORIES}
+                  selectedCategory={selectedCategory}
+                  onSelectCategory={setSelectedCategory}
+              />
+              <div className="flex-grow">
+                 {isLoading ? (
+                    <div className="flex justify-center items-center h-96">
+                      <Spinner size="lg" />
+                    </div>
+                  ) : sortedAds.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {sortedAds.map((ad) => (
+                        <AdCard 
+                          key={ad.id} 
+                          ad={ad} 
+                          onClick={() => viewAdDetails(ad)} 
+                          isFavorite={favoriteAdIds.has(ad.id)}
+                          onToggleFavorite={onToggleFavorite}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-tg-hint mt-12 flex flex-col items-center h-96 justify-center">
+                        <Icon icon="lucide:package-search" className="h-20 w-20 text-tg-border" />
+                        <p className="text-lg mt-4">{t('home.noResults')}</p>
+                    </div>
+                  )}
+              </div>
+          </div>
+      );
+  }
 
+  // Mobile (Telegram Mini App) view layout
   return (
     <div>
        <div className="flex gap-2 mb-4">
@@ -84,7 +121,7 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
             className="w-full bg-tg-secondary-bg p-3 pl-4 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
             />
        </div>
-        <div className="mb-4 overflow-x-auto pb-2 pt-2">
+        <div className="mb-4 overflow-x-auto pb-2 -mx-4 px-4">
             <div className="flex space-x-2">
             {CATEGORIES.map(category => (
                 <button
@@ -107,7 +144,7 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
           <Spinner size="lg" />
         </div>
       ) : sortedAds.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 pb-20">
+        <div className="grid grid-cols-2 gap-4">
           {sortedAds.map((ad) => (
             <AdCard 
               key={ad.id} 
@@ -124,14 +161,6 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
             <p className="text-lg mt-4">{t('home.noResults')}</p>
         </div>
       )}
-
-      <button 
-        onClick={() => navigateTo('create')}
-        className="fixed bottom-6 right-6 bg-tg-button text-tg-button-text p-4 rounded-full shadow-lg hover:bg-opacity-90 transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-tg-bg focus:ring-tg-link"
-        aria-label={t('home.createAdButtonLabel')}
-      >
-        <Icon icon="lucide:plus" className="h-8 w-8" />
-      </button>
     </div>
   );
 };
