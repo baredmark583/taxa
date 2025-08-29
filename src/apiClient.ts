@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
 import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings } from './types';
@@ -23,6 +24,8 @@ apiClient.interceptors.request.use(config => {
 export const registerUser = (data: any): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/register', data);
 export const loginUser = (data: any): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/login', data);
 export const telegramLogin = (initData: string): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/telegram', { initData });
+export const redeemWebCode = (code: string): Promise<{ data: { token: string, user: AuthUser } }> => apiClient.post('/api/auth/redeem-code', { code });
+
 
 // --- Ads ---
 export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
@@ -60,6 +63,8 @@ export const getFavoriteAdIds = (): Promise<{ data: string[] }> => apiClient.get
 export const getFavoriteAds = (): Promise<{ data: Ad[] }> => apiClient.get('/api/user/me/favorites');
 export const addFavorite = (adId: string): Promise<any> => apiClient.post(`/api/user/me/favorites/${adId}`);
 export const removeFavorite = (adId: string): Promise<any> => apiClient.delete(`/api/user/me/favorites/${adId}`);
+export const generateWebCode = (): Promise<{ data: { code: string, expiresAt: string } }> => apiClient.post('/api/user/me/generate-web-code');
+
 
 // --- Gemini ---
 export const generateAdContent = (prompt: string, imageBase64: string, mimeType: string): Promise<{ data: GeneratedAdData }> => {

@@ -4,6 +4,8 @@ import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
 import { resolveImageUrl } from '../utils/formatters';
+import { generateWebCode } from '../apiClient';
+import Spinner from './Spinner';
 
 
 interface ProfileViewProps {
@@ -67,6 +69,77 @@ const AdManagementDropdown: React.FC<{ ad: Ad, onUpdateStatus: (adId: string, st
     );
 };
 
+const WebLoginSection: React.FC = () => {
+    const { t } = useI18n();
+    const [webCode, setWebCode] = useState<{ code: string; expiresAt: string } | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [timeLeft, setTimeLeft] = useState(0);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (webCode) {
+            const expiryTime = new Date(webCode.expiresAt).getTime();
+            timerRef.current = setInterval(() => {
+                const now = new Date().getTime();
+                const distance = expiryTime - now;
+                if (distance < 0) {
+                    clearInterval(timerRef.current!);
+                    setWebCode(null);
+                } else {
+                    setTimeLeft(Math.round(distance / 1000));
+                }
+            }, 1000);
+        }
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+            }
+        };
+    }, [webCode]);
+
+    const handleGenerateCode = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const { data } = await generateWebCode();
+            setWebCode(data);
+        } catch (err) {
+            setError("Failed to generate code.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const formatTime = (seconds: number) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    };
+
+    return (
+        <div className="my-8 p-4 bg-tg-secondary-bg rounded-lg">
+            <h3 className="text-xl font-bold mb-4 text-center">{t('profile.webLogin')}</h3>
+            {!webCode ? (
+                <button 
+                    onClick={handleGenerateCode} 
+                    disabled={isLoading}
+                    className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                    {isLoading ? <Spinner size="sm" /> : t('profile.generateCode')}
+                </button>
+            ) : (
+                <div className="text-center">
+                    <p className="text-tg-hint text-sm">{t('profile.yourCode')}</p>
+                    <p className="text-4xl font-mono tracking-widest my-2 p-2 bg-tg-bg rounded-lg">{webCode.code}</p>
+                    <p className="text-tg-hint text-sm">{t('profile.codeExpiresIn')} {formatTime(timeLeft)}</p>
+                </div>
+            )}
+            {error && <p className="text-red-400 text-center mt-2">{error}</p>}
+        </div>
+    );
+}
+
 
 const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateTo, currentUser, onUpdateAdStatus }) => {
   const { t } = useI18n();
@@ -97,6 +170,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
               icon={<Icon icon="lucide:bookmark" className="h-6 w-6 text-tg-hint" />}
           />
       </div>
+      
+      <WebLoginSection />
 
       <h3 className="text-xl font-bold mb-4 text-center">{t('profile.myAds')}</h3>
       

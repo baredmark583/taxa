@@ -9,19 +9,25 @@ interface AuthPageProps {
 }
 
 const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
-    const { register, login, authError } = useAuth();
+    const { login, register, redeemCode, authError } = useAuth();
     const { t } = useI18n();
+    
+    // State for Admin login
     const [isLoginView, setIsLoginView] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
+    
+    // State for User one-time code login
+    const [webCode, setWebCode] = useState('');
+    
     const [isLoading, setIsLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
     
-    // IMPORTANT: Replace this with your actual bot's username
-    const botUsername = "taxaAIbot";
+    // This determines if we are on the /taxaadmin.html page.
+    const isAdminRoute = window.location.pathname.startsWith('/taxaadmin');
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleAdminSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setFormError(null);
@@ -32,110 +38,78 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
                 await register({ email, password, name });
             }
             onAuthSuccess();
-        } catch (error: any) {
-            setFormError(error.response?.data?.message || t('errors.unexpectedError'));
+        } catch (err: any) {
+            setFormError(err.response?.data?.message || 'Authentication failed');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const isTgBrowser = (window as any).Telegram?.WebApp?.platform !== 'unknown' && (window as any).Telegram?.WebApp?.platform !== undefined;
-
-    return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-100px)] p-4 animate-modal-fade-in">
-            <div className="w-full max-w-md p-8 space-y-6 bg-tg-secondary-bg rounded-lg shadow-xl">
-                {isTgBrowser ? (
-                    <div className="text-center">
-                        <div className="flex justify-center mb-4">
-                           <Icon icon="mdi:telegram" className="w-12 h-12 text-[#29B6F6]" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-tg-text">
-                            {t('auth.welcome')}
-                        </h2>
-                        <p className="text-tg-hint mt-2">
-                           {t('auth.tgLoginProblem')}
-                        </p>
-                        {authError && (
-                            <div className="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg my-4 text-left" role="alert">
-                                <p className="font-bold">{t('auth.authErrorTitle')}</p>
-                                <p className="text-sm">{authError}</p>
-                            </div>
-                        )}
-                        <p className="text-tg-hint text-sm mt-4">
-                           {t('auth.tgLoginSuggestion')}
-                        </p>
-                    </div>
-                ) : (
-                    <>
-                        <h2 className="text-2xl font-bold text-tg-text text-center">
-                            {isLoginView ? t('auth.loginTitle') : t('auth.registerTitle')}
-                        </h2>
-                       
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            {!isLoginView && (
-                                <input
-                                    type="text"
-                                    placeholder={t('auth.namePlaceholder')}
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    required
-                                    className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
-                                />
-                            )}
-                            <input
-                                type="email"
-                                placeholder={t('auth.emailPlaceholder')}
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                required
-                                className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
-                            />
-                            <input
-                                type="password"
-                                placeholder={t('auth.passwordPlaceholder')}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                                className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
-                            />
-                             {(formError || authError) && (
-                                <p className="text-red-400 text-sm text-center">{formError || authError}</p>
-                            )}
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full flex items-center justify-center px-4 py-3 font-semibold text-tg-button-text bg-tg-button rounded-md hover:bg-opacity-90 transition-transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed"
-                            >
-                                {isLoading ? <Spinner size="sm" /> : (isLoginView ? t('auth.loginButton') : t('auth.registerButton'))}
-                            </button>
-                        </form>
-                        <p className="text-sm text-tg-hint text-center">
-                            {isLoginView ? t('auth.noAccount') : t('auth.hasAccount')}
-                            <button onClick={() => { setIsLoginView(!isLoginView); setFormError(null); }} className="font-semibold text-tg-link hover:underline ml-1">
-                                {isLoginView ? t('auth.signUp') : t('auth.signIn')}
-                            </button>
-                        </p>
-                        <div className="relative my-4">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-tg-border"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-tg-secondary-bg text-tg-hint">{t('common.or')}</span>
-                            </div>
-                        </div>
-                        <a
-                            href={`https://t.me/${botUsername}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full inline-flex items-center justify-center px-4 py-3 font-semibold text-tg-button-text bg-[#29B6F6] rounded-md hover:bg-opacity-90 transition-transform hover:scale-105"
-                        >
-                           <Icon icon="mdi:telegram" className="w-6 h-6" /> <span className="ml-2">{t('auth.loginWithTelegram')}</span>
-                        </a>
-                    </>
+    const handleWebCodeSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setFormError(null);
+        try {
+            await redeemCode(webCode.toUpperCase());
+            onAuthSuccess();
+        } catch (err: any) {
+            setFormError(err.response?.data?.message || t('auth.invalidCode'));
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const AdminForm = () => (
+        <div className="max-w-sm mx-auto mt-8 p-6 bg-tg-secondary-bg rounded-lg shadow-xl">
+            <h2 className="text-2xl font-bold text-center mb-6">{isLoginView ? t('auth.loginTitle') : t('auth.registerTitle')}</h2>
+            <form onSubmit={handleAdminSubmit} className="space-y-4">
+                {!isLoginView && (
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder={t('auth.namePlaceholder')} required className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"/>
                 )}
-            </div>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.emailPlaceholder')} required className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"/>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.passwordPlaceholder')} required className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"/>
+                
+                {formError && <p className="text-red-400 text-sm text-center">{formError}</p>}
+                
+                <button type="submit" disabled={isLoading} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center">
+                    {isLoading ? <Spinner size="sm" /> : (isLoginView ? t('auth.loginButton') : t('auth.registerButton'))}
+                </button>
+            </form>
+            <p className="text-center text-sm text-tg-hint mt-4">
+                {isLoginView ? t('auth.noAccount') : t('auth.hasAccount')}{' '}
+                <button onClick={() => setIsLoginView(!isLoginView)} className="text-tg-link font-semibold hover:underline">
+                    {isLoginView ? t('auth.signUp') : t('auth.signIn')}
+                </button>
+            </p>
         </div>
     );
+    
+    const WebLoginForm = () => (
+         <div className="max-w-sm mx-auto mt-8 p-6 bg-tg-secondary-bg rounded-lg shadow-xl text-center">
+             <Icon icon="lucide:key-round" className="h-12 w-12 text-tg-link mx-auto mb-4" />
+             <h2 className="text-2xl font-bold mb-2">{t('auth.webLoginTitle')}</h2>
+             <p className="text-tg-hint text-sm mb-6">{t('auth.webLoginInstructions')}</p>
+             <form onSubmit={handleWebCodeSubmit} className="space-y-4">
+                 <input
+                     type="text"
+                     value={webCode}
+                     onChange={(e) => setWebCode(e.target.value)}
+                     placeholder={t('auth.codePlaceholder')}
+                     required
+                     className="w-full bg-tg-bg p-3 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none text-center text-lg tracking-widest font-mono uppercase"
+                     maxLength={6}
+                 />
+
+                {(formError || authError) && <p className="text-red-400 text-sm text-center">{formError || authError}</p>}
+
+                <button type="submit" disabled={isLoading} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center">
+                     {isLoading ? <Spinner size="sm" /> : t('auth.submitCodeButton')}
+                 </button>
+             </form>
+         </div>
+    );
+
+    return isAdminRoute ? <AdminForm /> : <WebLoginForm />;
 };
 
 export default AuthPage;

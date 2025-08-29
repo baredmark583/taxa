@@ -40,6 +40,10 @@
   "profile.markAsSold": "Отметить как проданное",
   "profile.archive": "В архив",
   "profile.activate": "Активировать",
+  "profile.webLogin": "Вход в браузере",
+  "profile.generateCode": "Сгенерировать код",
+  "profile.yourCode": "Ваш одноразовый код:",
+  "profile.codeExpiresIn": "Действителен до:",
 
   "favorites.emptyTitle": "Список избранного пуст",
   "favorites.emptySubtitle": "Нажмите на сердечко, чтобы добавить объявление.",
@@ -69,6 +73,11 @@
   "auth.hasAccount": "Уже есть аккаунт?",
   "auth.signIn": "Войти",
   "auth.loginWithTelegram": "Войти через Telegram",
+  "auth.webLoginTitle": "Вход в браузере",
+  "auth.webLoginInstructions": "Чтобы войти, откройте приложение в Telegram, перейдите в Профиль и сгенерируйте одноразовый код.",
+  "auth.codePlaceholder": "Введите код",
+  "auth.submitCodeButton": "Войти с кодом",
+  "auth.invalidCode": "Неверный или просроченный код.",
   
   "toast.linkCopied": "Ссылка скопирована!",
   "toast.addedToFavorites": "Добавлено в избранное",

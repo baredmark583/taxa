@@ -40,6 +40,10 @@
   "profile.markAsSold": "Позначити як продано",
   "profile.archive": "В архів",
   "profile.activate": "Активувати",
+  "profile.webLogin": "Вхід у браузері",
+  "profile.generateCode": "Згенерувати код",
+  "profile.yourCode": "Ваш одноразовий код:",
+  "profile.codeExpiresIn": "Дійсний до:",
 
   "favorites.emptyTitle": "Список обраного порожній",
   "favorites.emptySubtitle": "Натисніть на сердечко, щоб додати оголошення.",
@@ -69,6 +73,11 @@
   "auth.hasAccount": "Вже є акаунт?",
   "auth.signIn": "Увійти",
   "auth.loginWithTelegram": "Увійти через Telegram",
+  "auth.webLoginTitle": "Вхід у браузері",
+  "auth.webLoginInstructions": "Щоб увійти, відкрийте додаток у Telegram, перейдіть до Профілю та згенеруйте одноразовий код.",
+  "auth.codePlaceholder": "Введіть код",
+  "auth.submitCodeButton": "Увійти з кодом",
+  "auth.invalidCode": "Невірний або прострочений код.",
 
   "toast.linkCopied": "Посилання скопійовано!",
   "toast.addedToFavorites": "Додано в обране",

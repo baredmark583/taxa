@@ -1,12 +1,13 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { type AuthUser, type User } from './types';
-import { telegramLogin as apiTelegramLogin, loginUser, registerUser } from './apiClient';
+import { telegramLogin as apiTelegramLogin, loginUser, registerUser, redeemWebCode as apiRedeemWebCode } from './apiClient';
 
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   login: (data: any) => Promise<void>;
   register: (data: any) => Promise<void>;
+  redeemCode: (code: string) => Promise<void>;
   logout: () => void;
   authError: string | null;
 }
@@ -82,6 +83,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     handleAuthSuccess(data);
   };
 
+  const redeemCode = async (code: string) => {
+    const { data } = await apiRedeemWebCode(code);
+    handleAuthSuccess(data);
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('authToken');
@@ -91,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, authError }}>
+    <AuthContext.Provider value={{ user, isLoading, login, register, redeemCode, logout, authError }}>
       {children}
     </AuthContext.Provider>
   );

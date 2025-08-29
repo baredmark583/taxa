@@ -40,6 +40,10 @@
   "profile.markAsSold": "Mark as sold",
   "profile.archive": "Archive",
   "profile.activate": "Activate",
+  "profile.webLogin": "Login on Web",
+  "profile.generateCode": "Generate Code",
+  "profile.yourCode": "Your one-time code is:",
+  "profile.codeExpiresIn": "Expires in:",
 
   "favorites.emptyTitle": "Favorites list is empty",
   "favorites.emptySubtitle": "Click on the heart to add an ad.",
@@ -69,6 +73,11 @@
   "auth.hasAccount": "Already have an account?",
   "auth.signIn": "Sign in",
   "auth.loginWithTelegram": "Login with Telegram",
+  "auth.webLoginTitle": "Web Login",
+  "auth.webLoginInstructions": "To log in, open the app in Telegram, go to your Profile, and generate a one-time code.",
+  "auth.codePlaceholder": "Enter code",
+  "auth.submitCodeButton": "Log In with Code",
+  "auth.invalidCode": "Invalid or expired code.",
 
   "toast.linkCopied": "Link copied!",
   "toast.addedToFavorites": "Added to favorites",
