@@ -1,33 +1,61 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Ad, AuthUser } from '../types';
+import { getAdById } from '../apiClient';
 import { formatPrice, formatRelativeDate, resolveImageUrl } from '../utils/formatters';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
 import { useAppContext } from '../AppContext';
+import { useAuth } from '../AuthContext';
+import Spinner from './Spinner';
 
 interface AdDetailViewProps {
-  ad: Ad;
-  currentUser: AuthUser | null;
   showToast: (message: string) => void;
-  isFavorite: boolean;
+  isFavorite: Set<string>;
   onToggleFavorite: (adId: string) => void;
-  onViewSellerProfile: (sellerId: string) => void;
-  onStartChat: (ad: Ad) => void;
-  onEditAd: (ad: Ad) => void;
 }
 
-const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast, isFavorite, onToggleFavorite, onViewSellerProfile, onStartChat, onEditAd }) => {
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+const AdDetailView: React.FC<AdDetailViewProps> = ({ showToast, isFavorite, onToggleFavorite }) => {
+  const { adId } = useParams<{ adId: string }>();
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const { t } = useI18n();
   const { isWeb } = useAppContext();
 
-  const nextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex + 1) % ad.imageUrls.length);
-  };
+  const [ad, setAd] = useState<Ad | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const prevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex - 1 + ad.imageUrls.length) % ad.imageUrls.length);
-  };
+  useEffect(() => {
+    const fetchAd = async () => {
+      if (!adId) return;
+      setIsLoading(true);
+      try {
+        const response = await getAdById(adId);
+        setAd(response.data);
+      } catch (err) {
+        setError(t('errors.adNotFound'));
+        console.error("Failed to fetch ad:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAd();
+  }, [adId, t]);
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-96"><Spinner size="lg"/></div>;
+  }
+
+  if (error || !ad) {
+    return <p className="text-center text-red-400 mt-8">{error || t('errors.adNotFound')}</p>;
+  }
+  
+  const isMyAd = currentUser && ad.seller.id === currentUser.id;
+  
+  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % ad.imageUrls.length);
+  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + ad.imageUrls.length) % ad.imageUrls.length);
 
   const handleShare = async () => {
     const botUsername = 'taxaAIbot';
@@ -57,8 +85,13 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
     }
   };
 
-
-  const isMyAd = currentUser && ad.seller.id === currentUser.id;
+  const handleStartChat = () => {
+      if (!currentUser) {
+          navigate('/auth');
+          return;
+      }
+      navigate(`/chats/${ad.id}/${ad.seller.id}`);
+  };
 
   const ImageGallery = () => (
     <div className={`relative w-full aspect-square bg-tg-secondary-bg rounded-lg overflow-hidden ${isWeb ? 'sticky top-24' : ''}`}>
@@ -67,22 +100,14 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
           <img src={resolveImageUrl(ad.imageUrls[currentImageIndex])} alt={ad.title} className="w-full h-full object-contain" />
           {ad.imageUrls.length > 1 && (
             <>
-              <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                &#10094;
-              </button>
-              <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
-                &#10095;
-              </button>
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-                {currentImageIndex + 1} / {ad.imageUrls.length}
-              </div>
+              <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">&#10094;</button>
+              <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">&#10095;</button>
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">{currentImageIndex + 1} / {ad.imageUrls.length}</div>
             </>
           )}
         </>
       ) : (
-        <div className="flex items-center justify-center h-full text-tg-hint">
-          {t('common.noPhoto')}
-        </div>
+        <div className="flex items-center justify-center h-full text-tg-hint">{t('common.noPhoto')}</div>
       )}
       <button onClick={handleShare} className="absolute top-2 right-2 bg-black/40 text-white p-2 rounded-full hover:bg-black/60 transition-colors z-10">
           <Icon icon="lucide:share-2" className="h-6 w-6" />
@@ -98,16 +123,16 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
         </div>
         <div className="flex gap-2">
             {isMyAd ? (
-                 <button onClick={() => onEditAd(ad)} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center">
+                 <Link to={`/edit/${ad.id}`} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center">
                     {t('adDetail.edit')}
-                </button>
+                 </Link>
             ) : (
                 <>
-                <button onClick={() => onStartChat(ad)} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center">
+                <button onClick={handleStartChat} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center">
                     {t('adDetail.writeToSeller')}
                 </button>
-                 <button onClick={() => onToggleFavorite(ad.id)} className={`p-3 rounded-lg transition-colors ${isFavorite ? 'bg-red-500/20 text-red-400' : 'bg-tg-secondary-bg-hover'}`}>
-                    <Icon icon="lucide:heart" className={`h-6 w-6 ${isFavorite ? 'fill-current' : ''}`} />
+                 <button onClick={() => onToggleFavorite(ad.id)} className={`p-3 rounded-lg transition-colors ${isFavorite.has(ad.id) ? 'bg-red-500/20 text-red-400' : 'bg-tg-secondary-bg-hover'}`}>
+                    <Icon icon="lucide:heart" className={`h-6 w-6 ${isFavorite.has(ad.id) ? 'fill-current' : ''}`} />
                 </button>
                 </>
             )}
@@ -117,15 +142,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
             <p className="text-tg-hint whitespace-pre-wrap">{ad.description}</p>
         </div>
         {ad.tags && ad.tags.length > 0 && (
-            <div>
-                <div className="flex flex-wrap gap-2">
-                    {ad.tags.map((tag, index) => (
-                        <span key={index} className="bg-tg-secondary-bg px-3 py-1 rounded-full text-sm text-tg-hint">
-                            #{tag}
-                        </span>
-                    ))}
-                </div>
-            </div>
+            <div><div className="flex flex-wrap gap-2">{ad.tags.map((tag, index) => (<span key={index} className="bg-tg-secondary-bg px-3 py-1 rounded-full text-sm text-tg-hint">#{tag}</span>))}</div></div>
         )}
         <div className="text-sm text-tg-hint border-t border-tg-border pt-4 mt-6">
             <div className="flex justify-between"><span>{t('adDetail.category')}:</span> <span className="text-tg-text">{ad.category}</span></div>
@@ -134,16 +151,10 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
         </div>
          <div className="border-t border-tg-border pt-4">
             <h2 className="text-xl font-semibold mb-2">{t('adDetail.seller')}</h2>
-             <button onClick={() => onViewSellerProfile(ad.seller.id)} className="w-full flex items-center space-x-3 bg-tg-secondary-bg p-3 rounded-lg hover:bg-tg-secondary-bg-hover transition-colors text-left">
-                 <img
-                     src={resolveImageUrl(ad.seller.avatarUrl || `https://i.pravatar.cc/150?u=${ad.seller.id}`)}
-                     alt={ad.seller.name}
-                     className="w-12 h-12 rounded-full object-cover"
-                 />
-                 <div>
-                     <p className="font-bold text-lg">{ad.seller.name}</p>
-                 </div>
-             </button>
+             <Link to={`/seller/${ad.seller.id}`} className="w-full flex items-center space-x-3 bg-tg-secondary-bg p-3 rounded-lg hover:bg-tg-secondary-bg-hover transition-colors text-left">
+                 <img src={resolveImageUrl(ad.seller.avatarUrl || `https://i.pravatar.cc/150?u=${ad.seller.id}`)} alt={ad.seller.name} className="w-12 h-12 rounded-full object-cover" />
+                 <div><p className="font-bold text-lg">{ad.seller.name}</p></div>
+             </Link>
         </div>
       </div>
   );
@@ -151,12 +162,8 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ ad, currentUser, showToast,
   if (isWeb) {
       return (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 xl:gap-12 animate-modal-fade-in">
-              <div className="lg:col-span-3">
-                  <ImageGallery />
-              </div>
-              <div className="lg:col-span-2">
-                  <AdInfo />
-              </div>
+              <div className="lg:col-span-3"><ImageGallery /></div>
+              <div className="lg:col-span-2"><AdInfo /></div>
           </div>
       );
   }

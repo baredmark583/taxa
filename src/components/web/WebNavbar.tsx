@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthUser, Page } from '../../types';
 import { useI18n } from '../../I18nContext';
 import { Icon } from '@iconify/react';
@@ -32,10 +33,10 @@ const WebNavbar: React.FC<WebNavbarProps> = ({ navigateTo, user, logout }) => {
             <div className="container mx-auto px-4 lg:px-8">
                 <div className="flex items-center justify-between h-20">
                     <div className="flex-shrink-0">
-                        <a href="/" className="flex items-center gap-2 text-2xl font-bold">
+                        <Link to="/" className="flex items-center gap-2 text-2xl font-bold">
                             <Icon icon="lucide:sparkles" className="text-tg-link"/>
                             <span>Taxa AI</span>
-                        </a>
+                        </Link>
                     </div>
 
                     <div className="hidden md:block w-full max-w-md">
@@ -50,13 +51,13 @@ const WebNavbar: React.FC<WebNavbarProps> = ({ navigateTo, user, logout }) => {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => navigateTo('create')}
+                        <Link
+                            to="/create"
                             className="hidden sm:flex items-center gap-2 bg-tg-button text-tg-button-text font-bold py-2 px-4 rounded-lg hover:bg-opacity-90 transition-colors"
                         >
                             <Icon icon="lucide:plus" />
                             <span>{t('header.create')}</span>
-                        </button>
+                        </Link>
                         
                         {user ? (
                             <div ref={profileRef} className="relative">
@@ -65,26 +66,18 @@ const WebNavbar: React.FC<WebNavbarProps> = ({ navigateTo, user, logout }) => {
                                 </button>
                                 {isProfileOpen && (
                                     <div className="absolute right-0 mt-2 w-48 bg-tg-secondary-bg-hover rounded-md shadow-lg py-1 z-40">
-                                        <button onClick={() => { navigateTo('profile'); setIsProfileOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">
-                                            {t('header.profile')}
-                                        </button>
-                                         <button onClick={() => { navigateTo('favorites'); setIsProfileOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">
-                                            {t('header.favorites')}
-                                        </button>
-                                        <button onClick={() => { navigateTo('chats'); setIsProfileOpen(false); }} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">
-                                            {t('header.chats')}
-                                        </button>
+                                        <Link to="/profile" onClick={() => setIsProfileOpen(false)} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">{t('header.profile')}</Link>
+                                        <Link to="/favorites" onClick={() => setIsProfileOpen(false)} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">{t('header.favorites')}</Link>
+                                        <Link to="/chats" onClick={() => setIsProfileOpen(false)} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">{t('header.chats')}</Link>
                                         <div className="border-t border-tg-border my-1"></div>
-                                        <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-tg-bg">
-                                            {t('common.logout')}
-                                        </button>
+                                        <button onClick={logout} className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-tg-bg">{t('common.logout')}</button>
                                     </div>
                                 )}
                             </div>
                         ) : (
-                            <button onClick={() => navigateTo('auth')} className="font-bold hover:text-tg-link transition-colors">
+                            <Link to="/auth" className="font-bold hover:text-tg-link transition-colors">
                                 {t('auth.loginTitle')}
-                            </button>
+                            </Link>
                         )}
                     </div>
                 </div>

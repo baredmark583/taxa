@@ -6,7 +6,6 @@ import { useI18n } from '../I18nContext';
 
 interface AdCardProps {
   ad: Ad;
-  onClick: () => void;
   isFavorite: boolean;
   onToggleFavorite: (adId: string) => void;
 }
@@ -49,11 +48,12 @@ const FavoriteButton: React.FC<{ isFavorite: boolean, onClick: (e: React.MouseEv
   );
 };
 
-const AdCard: React.FC<AdCardProps> = ({ ad, onClick, isFavorite, onToggleFavorite }) => {
+const AdCard: React.FC<AdCardProps> = ({ ad, isFavorite, onToggleFavorite }) => {
   const { t } = useI18n();
   
   const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
+    e.preventDefault(); // Prevent navigation when clicking the favorite icon
+    e.stopPropagation(); 
     onToggleFavorite(ad.id);
   };
   
@@ -64,7 +64,6 @@ const AdCard: React.FC<AdCardProps> = ({ ad, onClick, isFavorite, onToggleFavori
   return (
     <div 
       className={`relative bg-tg-secondary-bg rounded-lg overflow-hidden shadow-lg transition-transform duration-200 flex flex-col ${ad.status === 'sold' || ad.status === 'archived' ? 'opacity-60' : 'cursor-pointer hover:scale-105'}`}
-      onClick={ad.status !== 'sold' && ad.status !== 'archived' ? onClick : undefined}
     >
       {ad.isBoosted ? <BoostBadge /> : <StatusBadge status={ad.status} />}
       <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteClick} />

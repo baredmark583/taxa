@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getFavoriteAds } from '../apiClient';
 import { Ad } from '../types';
 import AdCard from '../components/AdCard';
@@ -7,12 +8,11 @@ import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
 
 interface FavoritesPageProps {
-    viewAdDetails: (ad: Ad) => void;
     favoriteAdIds: Set<string>;
     onToggleFavorite: (adId: string) => void;
 }
 
-const FavoritesPage: React.FC<FavoritesPageProps> = ({ viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+const FavoritesPage: React.FC<FavoritesPageProps> = ({ favoriteAdIds, onToggleFavorite }) => {
     const { t } = useI18n();
     const [favoriteAds, setFavoriteAds] = useState<Ad[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +33,7 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ viewAdDetails, favoriteAd
             }
         };
         fetchFavorites();
-    }, [favoriteAdIds, t]); // Refetch when the set of favorite IDs changes
+    }, [favoriteAdIds, t]);
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Spinner size="lg" /></div>;
@@ -48,13 +48,13 @@ const FavoritesPage: React.FC<FavoritesPageProps> = ({ viewAdDetails, favoriteAd
             {favoriteAds.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {favoriteAds.map(ad => (
-                        <AdCard
-                            key={ad.id}
-                            ad={ad}
-                            onClick={() => viewAdDetails(ad)}
-                            isFavorite={favoriteAdIds.has(ad.id)}
-                            onToggleFavorite={onToggleFavorite}
-                        />
+                         <Link to={`/ad/${ad.id}`} key={ad.id} className="block">
+                            <AdCard
+                                ad={ad}
+                                isFavorite={favoriteAdIds.has(ad.id)}
+                                onToggleFavorite={onToggleFavorite}
+                            />
+                        </Link>
                     ))}
                 </div>
             ) : (

@@ -1,37 +1,44 @@
 import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { type Ad, type Page, type AuthUser, AdStatus } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
 import { useI18n } from '../I18nContext';
 import { resolveImageUrl } from '../utils/formatters';
-import { generateWebCode } from '../apiClient';
+import { generateWebCode, getAds } from '../apiClient';
 import Spinner from './Spinner';
+import { useAuth } from '../AuthContext';
 
 
 interface ProfileViewProps {
-  ads: Ad[];
-  viewAdDetails: (ad: Ad) => void;
-  navigateTo: (page: Page) => void;
-  currentUser: AuthUser;
   onUpdateAdStatus: (adId: string, status: AdStatus) => void;
 }
 
 const ProfileButton: React.FC<{
     icon: React.ReactNode;
     label: string;
-    onClick: () => void;
+    to?: string;
+    onClick?: () => void;
     disabled?: boolean;
-}> = ({ icon, label, onClick, disabled }) => (
-    <button 
-        onClick={onClick} 
-        disabled={disabled}
-        className="w-full flex items-center p-4 bg-tg-secondary-bg rounded-lg hover:bg-tg-secondary-bg-hover transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-        {icon}
-        <span className="ml-4 font-semibold">{label}</span>
-        {disabled && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs bg-tg-bg px-2 py-1 rounded-full text-tg-hint">{useI18n().t('common.soon')}</span>}
-    </button>
-);
+}> = ({ icon, label, to, onClick, disabled }) => {
+    const content = (
+        <div className="w-full flex items-center p-4 bg-tg-secondary-bg rounded-lg hover:bg-tg-secondary-bg-hover transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed">
+            {icon}
+            <span className="ml-4 font-semibold">{label}</span>
+            {disabled && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs bg-tg-bg px-2 py-1 rounded-full text-tg-hint">{useI18n().t('common.soon')}</span>}
+        </div>
+    );
+    
+    if (disabled) {
+        return <button disabled className="w-full">{content}</button>;
+    }
+    
+    if (to) {
+        return <Link to={to}>{content}</Link>;
+    }
+    
+    return <button onClick={onClick} className="w-full">{content}</button>;
+};
 
 const AdManagementDropdown: React.FC<{ ad: Ad, onUpdateStatus: (adId: string, status: AdStatus) => void }> = ({ ad, onUpdateStatus }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -91,11 +98,7 @@ const WebLoginSection: React.FC = () => {
                 }
             }, 1000);
         }
-        return () => {
-            if (timerRef.current) {
-                clearInterval(timerRef.current);
-            }
-        };
+        return () => { if (timerRef.current) clearInterval(timerRef.current); };
     }, [webCode]);
 
     const handleGenerateCode = async () => {
@@ -121,11 +124,7 @@ const WebLoginSection: React.FC = () => {
         <div className="my-8 p-4 bg-tg-secondary-bg rounded-lg">
             <h3 className="text-xl font-bold mb-4 text-center">{t('profile.webLogin')}</h3>
             {!webCode ? (
-                <button 
-                    onClick={handleGenerateCode} 
-                    disabled={isLoading}
-                    className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center"
-                >
+                <button onClick={handleGenerateCode} disabled={isLoading} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center">
                     {isLoading ? <Spinner size="sm" /> : t('profile.generateCode')}
                 </button>
             ) : (
@@ -140,12 +139,25 @@ const WebLoginSection: React.FC = () => {
     );
 }
 
-
-const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateTo, currentUser, onUpdateAdStatus }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ onUpdateAdStatus }) => {
+  const { user: currentUser } = useAuth();
   const { t } = useI18n();
-  const myAds = useMemo(() => {
-    return ads.filter(ad => ad.sellerId === currentUser.id);
-  }, [ads, currentUser]);
+  const navigate = useNavigate();
+  const [myAds, setMyAds] = useState<Ad[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (currentUser) {
+        getAds({ sellerId: currentUser.id })
+            .then(response => {
+                setMyAds(response.data);
+            })
+            .catch(err => console.error("Failed to fetch user's ads:", err))
+            .finally(() => setIsLoading(false));
+    }
+  }, [currentUser]);
+
+  if (!currentUser) return null; // Should be handled by ProtectedRoute
   
   const userAvatar = resolveImageUrl(currentUser?.avatarUrl || `https://i.pravatar.cc/150?u=${currentUser?.id || 'default'}`);
 
@@ -158,33 +170,21 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
       </div>
       
       <div className="space-y-2 mb-8">
-          <ProfileButton
-              onClick={() => navigateTo('favorites')}
-              label={t('profile.favorites')}
-              icon={<Icon icon="lucide:heart" className="h-6 w-6 text-tg-hint" />}
-          />
-          <ProfileButton
-              onClick={() => {}}
-              label={t('profile.savedSearches')}
-              disabled={true}
-              icon={<Icon icon="lucide:bookmark" className="h-6 w-6 text-tg-hint" />}
-          />
+          <ProfileButton to="/favorites" label={t('profile.favorites')} icon={<Icon icon="lucide:heart" className="h-6 w-6 text-tg-hint" />} />
+          <ProfileButton label={t('profile.savedSearches')} disabled icon={<Icon icon="lucide:bookmark" className="h-6 w-6 text-tg-hint" />} />
       </div>
       
       <WebLoginSection />
 
       <h3 className="text-xl font-bold mb-4 text-center">{t('profile.myAds')}</h3>
       
-      {myAds.length > 0 ? (
+      {isLoading ? <div className="flex justify-center"><Spinner /></div> : myAds.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {myAds.map((ad) => (
             <div key={ad.id} className="relative">
-                <AdCard 
-                  ad={ad} 
-                  onClick={() => viewAdDetails(ad)} 
-                  isFavorite={false} // Favorites are not relevant for own ads
-                  onToggleFavorite={() => {}} 
-                />
+                <Link to={`/ad/${ad.id}`} className="block">
+                    <AdCard ad={ad} isFavorite={false} onToggleFavorite={() => {}} />
+                </Link>
                 <AdManagementDropdown ad={ad} onUpdateStatus={onUpdateAdStatus} />
             </div>
           ))}
@@ -193,10 +193,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
         <div className="text-center text-tg-hint mt-12 flex flex-col items-center">
           <Icon icon="lucide:package-search" className="h-20 w-20 text-tg-border" />
           <p className="text-lg mt-4 mb-4">{t('profile.noAds')}</p>
-          <button
-            onClick={() => navigateTo('create')}
-            className="bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors"
-          >
+          <button onClick={() => navigate('/create')} className="bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">
             {t('profile.createFirstAd')}
           </button>
         </div>

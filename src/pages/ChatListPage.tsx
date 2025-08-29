@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getConversations } from '../apiClient';
-import { ChatConversation, ChatContext } from '../types';
+import { ChatConversation } from '../types';
 import Spinner from '../components/Spinner';
 import { Icon } from '@iconify/react';
 import { formatRelativeDate, resolveImageUrl } from '../utils/formatters';
-// FIX: Passed the translation function `t` to `formatRelativeDate` to fix a missing argument error.
 import { useI18n } from '../I18nContext';
 
-interface ChatListPageProps {
-    onViewChat: (context: ChatContext) => void;
-}
+interface ChatListPageProps {}
 
-const ChatListPage: React.FC<ChatListPageProps> = ({ onViewChat }) => {
+const ChatListPage: React.FC<ChatListPageProps> = () => {
     const [conversations, setConversations] = useState<ChatConversation[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const navigate = useNavigate();
     const { t } = useI18n();
 
     useEffect(() => {
@@ -35,13 +34,7 @@ const ChatListPage: React.FC<ChatListPageProps> = ({ onViewChat }) => {
     }, []);
 
     const handleConversationClick = (convo: ChatConversation) => {
-        onViewChat({
-            adId: convo.adId,
-            adTitle: convo.adTitle,
-            adImageUrl: convo.adImageUrls[0],
-            participantId: convo.participantId,
-            participantName: convo.participantName
-        });
+        navigate(`/chats/${convo.adId}/${convo.participantId}`);
     };
 
     if (isLoading) {

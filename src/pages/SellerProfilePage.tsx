@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { getAds } from '../apiClient';
 import { Ad } from '../types';
 import AdCard from '../components/AdCard';
@@ -8,13 +9,12 @@ import { useI18n } from '../I18nContext';
 import { resolveImageUrl } from '../utils/formatters';
 
 interface SellerProfilePageProps {
-    sellerId: string;
-    viewAdDetails: (ad: Ad) => void;
     favoriteAdIds: Set<string>;
     onToggleFavorite: (adId: string) => void;
 }
 
-const SellerProfilePage: React.FC<SellerProfilePageProps> = ({ sellerId, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+const SellerProfilePage: React.FC<SellerProfilePageProps> = ({ favoriteAdIds, onToggleFavorite }) => {
+    const { sellerId } = useParams<{ sellerId: string }>();
     const { t } = useI18n();
     const [sellerAds, setSellerAds] = useState<Ad[]>([]);
     const [sellerInfo, setSellerInfo] = useState<{name: string, avatarUrl?: string} | null>(null);
@@ -22,6 +22,7 @@ const SellerProfilePage: React.FC<SellerProfilePageProps> = ({ sellerId, viewAdD
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (!sellerId) return;
         const fetchSellerData = async () => {
             setIsLoading(true);
             setError(null);
@@ -31,8 +32,7 @@ const SellerProfilePage: React.FC<SellerProfilePageProps> = ({ sellerId, viewAdD
                 if (response.data.length > 0) {
                     setSellerInfo(response.data[0].seller);
                 } else {
-                    // If the user has no ads, we can't get their info from an ad.
-                    // This would require a separate endpoint `getUserById`. For now, we handle this case.
+                    // This would require a separate endpoint `getUserById`.
                     console.log("Seller has no ads, can't pull info.");
                 }
             } catch (err) {
@@ -65,13 +65,13 @@ const SellerProfilePage: React.FC<SellerProfilePageProps> = ({ sellerId, viewAdD
             {sellerAds.length > 0 ? (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {sellerAds.map(ad => (
-                        <AdCard
-                            key={ad.id}
-                            ad={ad}
-                            onClick={() => viewAdDetails(ad)}
-                            isFavorite={favoriteAdIds.has(ad.id)}
-                            onToggleFavorite={onToggleFavorite}
-                        />
+                         <Link to={`/ad/${ad.id}`} key={ad.id} className="block">
+                            <AdCard
+                                ad={ad}
+                                isFavorite={favoriteAdIds.has(ad.id)}
+                                onToggleFavorite={onToggleFavorite}
+                            />
+                        </Link>
                     ))}
                 </div>
             ) : (

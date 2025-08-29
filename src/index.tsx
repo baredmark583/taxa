@@ -4,6 +4,7 @@ import App from './App';
 import { AuthProvider } from './AuthContext';
 import { I18nProvider } from './I18nContext';
 import { AppProvider } from './AppContext';
+import { BrowserRouter } from 'react-router-dom';
 import './stile/index.css';
 
 const rootElement = document.getElementById('root');
@@ -14,12 +15,14 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <AuthProvider>
-      <I18nProvider>
-        <AppProvider>
-          <App />
-        </AppProvider>
-      </I18nProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <I18nProvider>
+          <AppProvider>
+            <App />
+          </AppProvider>
+        </I18nProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </React.StrictMode>
 );

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { type Ad, type Page } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
@@ -9,12 +10,8 @@ import { useAppContext } from '../AppContext';
 import Sidebar from './web/Sidebar';
 
 interface HomeViewProps {
-  initialAds: Ad[];
-  navigateTo: (page: Page) => void;
-  viewAdDetails: (ad: Ad) => void;
   favoriteAdIds: Set<string>;
   onToggleFavorite: (adId: string) => void;
-  showToast: (message: string) => void;
 }
 
 type SortBy = 'date' | 'price_asc' | 'price_desc';
@@ -31,13 +28,13 @@ const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) =
 };
 
 
-const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetails, favoriteAdIds, onToggleFavorite }) => {
+const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) => {
   const { t } = useI18n();
   const { isWeb } = useAppContext();
   const CATEGORIES = useMemo(() => (t('categories').split(',')), [t]);
   
-  const [ads, setAds] = useState<Ad[]>(initialAds);
-  const [isLoading, setIsLoading] = useState(false);
+  const [ads, setAds] = useState<Ad[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortBy>('date');
@@ -61,16 +58,18 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
   const debouncedFetchAds = useMemo(() => debounce(fetchAds, 300), [fetchAds]);
 
   useEffect(() => {
+    // Initial fetch
+    fetchAds(searchQuery, selectedCategory, sortBy);
+  }, []); // Only on mount
+
+  useEffect(() => {
     if (searchQuery) {
         debouncedFetchAds(searchQuery, selectedCategory, sortBy);
     } else {
         fetchAds(searchQuery, selectedCategory, sortBy);
     }
-  }, [searchQuery, selectedCategory, sortBy, fetchAds, debouncedFetchAds]);
+  }, [searchQuery, selectedCategory, sortBy, debouncedFetchAds, fetchAds]);
 
-  const sortedAds = useMemo(() => {
-    return ads;
-  }, [ads]);
 
   // Web view layout
   if (isWeb) {
@@ -83,19 +82,19 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
               />
               <div className="flex-grow">
                  {isLoading ? (
-                    <div className="flex justify-center items-center h-96">
-                      <Spinner size="lg" />
-                    </div>
-                  ) : sortedAds.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                      {sortedAds.map((ad) => (
-                        <AdCard 
-                          key={ad.id} 
-                          ad={ad} 
-                          onClick={() => viewAdDetails(ad)} 
-                          isFavorite={favoriteAdIds.has(ad.id)}
-                          onToggleFavorite={onToggleFavorite}
-                        />
+                      {Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-72 bg-tg-secondary-bg-hover rounded-lg animate-pulse" />)}
+                    </div>
+                  ) : ads.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {ads.map((ad) => (
+                        <Link to={`/ad/${ad.id}`} key={ad.id} className="block">
+                          <AdCard 
+                            ad={ad} 
+                            isFavorite={favoriteAdIds.has(ad.id)}
+                            onToggleFavorite={onToggleFavorite}
+                          />
+                        </Link>
                       ))}
                     </div>
                   ) : (
@@ -140,19 +139,19 @@ const HomeView: React.FC<HomeViewProps> = ({ initialAds, navigateTo, viewAdDetai
         </div>
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Spinner size="lg" />
-        </div>
-      ) : sortedAds.length > 0 ? (
         <div className="grid grid-cols-2 gap-4">
-          {sortedAds.map((ad) => (
-            <AdCard 
-              key={ad.id} 
-              ad={ad} 
-              onClick={() => viewAdDetails(ad)} 
-              isFavorite={favoriteAdIds.has(ad.id)}
-              onToggleFavorite={onToggleFavorite}
-            />
+          {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-60 bg-tg-secondary-bg-hover rounded-lg animate-pulse" />)}
+        </div>
+      ) : ads.length > 0 ? (
+        <div className="grid grid-cols-2 gap-4">
+          {ads.map((ad) => (
+            <Link to={`/ad/${ad.id}`} key={ad.id} className="block">
+              <AdCard 
+                ad={ad} 
+                isFavorite={favoriteAdIds.has(ad.id)}
+                onToggleFavorite={onToggleFavorite}
+              />
+            </Link>
           ))}
         </div>
       ) : (
