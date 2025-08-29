@@ -4,7 +4,6 @@ import { type Ad, type Page, type AuthUser, ChatContext } from './types';
 import { getAds, getAdById, getFavoriteAdIds, addFavorite, removeFavorite, updateAdStatus } from './apiClient';
 import { useAuth } from './AuthContext';
 import AuthPage from './pages/AuthPage';
-import AdminPage from './pages/AdminPage';
 import HomeView from './components/HomeView';
 import CreateAdView from './components/CreateAdView';
 import ProfileView from './components/ProfileView';
@@ -138,7 +137,7 @@ const App: React.FC = () => {
 
   // FIX: Navigation to protected routes now checks for auth.
   const navigateTo = (page: Page) => {
-    const protectedPages: Page[] = ['create', 'profile', 'admin', 'favorites', 'chats', 'chatThread'];
+    const protectedPages: Page[] = ['create', 'profile', 'favorites', 'chats', 'chatThread'];
     if (protectedPages.includes(page) && !user) {
         setCurrentPage('auth');
     } else {
@@ -206,7 +205,7 @@ const App: React.FC = () => {
       navigateTo('home');
       return;
     }
-    if (['detail', 'create', 'profile', 'favorites', 'chats', 'admin', 'sellerProfile'].includes(currentPage)) {
+    if (['detail', 'create', 'profile', 'favorites', 'chats', 'sellerProfile'].includes(currentPage)) {
       navigateTo('home');
       setSelectedAd(null);
       setSelectedSellerId(null);
@@ -252,8 +251,6 @@ const App: React.FC = () => {
         return user ? <ChatListPage onViewChat={viewChat} /> : null;
       case 'chatThread':
         return user && chatContext ? <ChatThreadPage context={chatContext} currentUser={user} /> : <p>{t('errors.chatNotFound')}</p>;
-      case 'admin':
-        return user?.role === 'ADMIN' ? <AdminPage showToast={showToast} /> : <p>{t('errors.accessDenied')}</p>;
       case 'home':
       default:
         return <HomeView initialAds={ads} navigateTo={navigateTo} viewAdDetails={viewAdDetails} favoriteAdIds={favoriteAdIds} onToggleFavorite={handleToggleFavorite} showToast={showToast} />;

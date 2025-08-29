@@ -36,7 +36,7 @@ export interface Ad {
   tags?: string[];
   sellerId: string;
   seller: {
-    id: string;
+    id:string;
     name: string;
     avatarUrl?: string;
     // Optional fields for partial component compatibility
@@ -64,7 +64,7 @@ export interface GeneratedAdData {
   tags: string[];
 }
 
-export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'admin' | 'auth';
+export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'auth';
 
 export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_delivery';
 export type UserStatus = 'active' | 'banned';

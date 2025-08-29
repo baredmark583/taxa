@@ -96,13 +96,6 @@ const ProfileView: React.FC<ProfileViewProps> = ({ ads, viewAdDetails, navigateT
               disabled={true}
               icon={<Icon icon="lucide:bookmark" className="h-6 w-6 text-tg-hint" />}
           />
-           {currentUser.role === 'ADMIN' && (
-             <ProfileButton
-                onClick={() => navigateTo('admin')}
-                label={t('profile.adminPanel')}
-                icon={<Icon icon="lucide:shield-check" className="h-6 w-6 text-tg-hint" />}
-            />
-           )}
       </div>
 
       <h3 className="text-xl font-bold mb-4 text-center">{t('profile.myAds')}</h3>
