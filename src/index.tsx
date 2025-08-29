@@ -4,6 +4,7 @@ import App from './App';
 import { AuthProvider } from './AuthContext';
 import { I18nProvider } from './I18nContext';
 import { AppProvider } from './AppContext';
+import './stile/index.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

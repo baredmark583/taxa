@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import AdminApp from './AdminApp';
 import { AuthProvider } from './AuthContext';
 import { I18nProvider } from './I18nContext';
+import './stile/index.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
