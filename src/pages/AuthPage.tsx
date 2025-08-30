@@ -24,8 +24,8 @@ const AuthPage: React.FC<AuthPageProps> = ({ onAuthSuccess }) => {
     const [isLoading, setIsLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
     
-    // This determines if we are on the /taxaadmin.html page.
-    const isAdminRoute = window.location.pathname.startsWith('/taxaadmin');
+    // This determines if we are on the /admin.html page.
+    const isAdminRoute = window.location.pathname.startsWith('/admin.html');
 
     const handleAdminSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
