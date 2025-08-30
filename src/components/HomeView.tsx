@@ -130,24 +130,15 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
               </div>
             </div>
           )}
-
-          <div className="space-y-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-center">Знайдіть оголошення у вашому регіоні</h2>
-              <InteractiveMap stats={regionStats} onRegionSelect={setSelectedRegion} />
-              {selectedRegion && (
-                <div className="text-center">
-                    <button onClick={() => setSelectedRegion(null)} className="text-sm text-primary dark:text-dark-primary hover:underline">
-                        Скинути фільтр регіону
-                    </button>
-                </div>
-              )}
-          </div>
           
           <div className="flex gap-8">
               <Sidebar 
                   categories={CATEGORIES}
                   selectedCategory={selectedCategory}
                   onSelectCategory={setSelectedCategory}
+                  stats={regionStats}
+                  onRegionSelect={setSelectedRegion}
+                  selectedRegion={selectedRegion}
               />
               <div className="flex-grow">
                  <AdGrid />

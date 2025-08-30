@@ -84,7 +84,7 @@ const InteractiveMap: React.FC<InteractiveMapProps> = ({ stats, onRegionSelect }
     const position: L.LatLngExpression = [48.3794, 31.1656]; // Centered on Ukraine
     
     return (
-        <div className="h-[60vh] w-full rounded-2xl overflow-hidden border-2 border-border dark:border-dark-border shadow-lg">
+        <div className="h-56 w-full rounded-lg overflow-hidden">
             <MapContainer
                 center={position}
                 zoom={6}
