@@ -164,7 +164,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
             case 'categories':
                 return <CategoriesView showToast={showToast} />;
             case 'automation':
-                return <AutomationView />;
+                return <AutomationView showToast={showToast} />;
             case 'settings':
                 return <SettingsView showToast={showToast} />;
             case 'users':

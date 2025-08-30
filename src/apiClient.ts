@@ -114,6 +114,10 @@ export const createCategory = (data: { name: string, parentId?: string | null })
 export const updateCategory = (id: string, data: { name: string, parentId?: string | null }): Promise<{ data: Category }> => apiClient.put(`/api/admin/categories/${id}`, data);
 export const deleteCategory = (id: string): Promise<any> => apiClient.delete(`/api/admin/categories/${id}`);
 
+// Automation
+export const getAutomationFlow = (triggerType: string): Promise<{ data: { flowData: any } }> => apiClient.get('/api/admin/automation', { params: { triggerType } });
+export const saveAutomationFlow = (name: string, triggerType: string, flowData: any): Promise<any> => apiClient.post('/api/admin/automation', { name, triggerType, flowData });
+
 
 // ... other API functions will be added here as we migrate them ...
 
