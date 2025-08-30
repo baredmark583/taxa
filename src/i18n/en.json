@@ -13,6 +13,9 @@
   "home.searchPlaceholder": "Search...",
   "home.createAdButtonLabel": "Create new ad",
   "home.noResults": "Nothing found",
+  "home.filterAll": "All",
+  "home.filterSimpleAds": "Ads",
+  "home.filterProducts": "Products",
   "categories": "All,Electronics,Furniture,Clothing,Transport,Real Estate,Hobbies,Baby products,Other",
 
   "adCard.reserved": "Reserved",
@@ -24,6 +27,8 @@
   "adDetail.description": "Description",
   "adDetail.writeToSeller": "Write to seller",
   "adDetail.edit": "Edit",
+  "adDetail.addToCart": "Add to Cart",
+  "adDetail.adType": "Type",
   "adDetail.category": "Category",
   "adDetail.location": "Location",
   "adDetail.published": "Published",
@@ -106,6 +111,9 @@
   "adStatus.sold": "Sold",
   "adStatus.archived": "Archived",
   "adStatus.in_delivery": "In Delivery",
+
+  "adType.simple_ad": "Simple Ad",
+  "adType.product": "Marketplace Product",
 
   "time.justNow": "just now",
   "time.minutesAgo": "min. ago",

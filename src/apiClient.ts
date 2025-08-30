@@ -1,6 +1,6 @@
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings, HomePageBanner, Category, RegionStat, AutomationRunHistory } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, PlatformSettings, HomePageBanner, Category, RegionStat, AutomationRunHistory } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -27,7 +27,7 @@ export const redeemWebCode = (code: string): Promise<{ data: { token: string, us
 
 
 // --- Ads ---
-export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string, region?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
+export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string, region?: string, type?: 'simple_ad' | 'product' } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
 export const getAdStatsByRegion = (): Promise<{ data: RegionStat[] }> => apiClient.get('/api/ads/stats-by-region');
 
 
@@ -94,8 +94,8 @@ export const deleteAdminUser = (id: string): Promise<any> => apiClient.delete(`/
 export const getAdminAds = (): Promise<{ data: AdminAd[] }> => apiClient.get('/api/admin/ads');
 export const updateAdminAd = (id: string, data: Partial<AdminAd>): Promise<{ data: AdminAd }> => apiClient.put(`/api/admin/ads/${id}`, data);
 export const deleteAdminAd = (id: string): Promise<any> => apiClient.delete(`/api/admin/ads/${id}`);
-export const getAdminSettings = (): Promise<{ data: StorageSettings }> => apiClient.get('/api/admin/settings');
-export const updateAdminSettings = (settings: Partial<StorageSettings>): Promise<{ data: { message: string } }> => apiClient.put('/api/admin/settings', settings);
+export const getAdminSettings = (): Promise<{ data: PlatformSettings }> => apiClient.get('/api/admin/settings');
+export const updateAdminSettings = (settings: Partial<PlatformSettings>): Promise<{ data: { message: string } }> => apiClient.put('/api/admin/settings', settings);
 
 // Banner
 export const getBanner = (): Promise<{ data: HomePageBanner | null }> => apiClient.get('/api/admin/banner');

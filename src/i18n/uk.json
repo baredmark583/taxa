@@ -13,6 +13,9 @@
   "home.searchPlaceholder": "Пошук...",
   "home.createAdButtonLabel": "Створити нове оголошення",
   "home.noResults": "Нічого не знайдено",
+  "home.filterAll": "Всі",
+  "home.filterSimpleAds": "Оголошення",
+  "home.filterProducts": "Товари",
   "categories": "Все,Електроніка,Меблі,Одяг,Транспорт,Нерухомість,Хобі,Дитячі товари,Інше",
 
   "adCard.reserved": "В резерві",
@@ -24,6 +27,8 @@
   "adDetail.description": "Опис",
   "adDetail.writeToSeller": "Написати продавцю",
   "adDetail.edit": "Редагувати",
+  "adDetail.addToCart": "Додати в кошик",
+  "adDetail.adType": "Тип",
   "adDetail.category": "Категорія",
   "adDetail.location": "Місцезнаходження",
   "adDetail.published": "Опубліковано",
@@ -107,6 +112,9 @@
   "adStatus.archived": "В архіві",
   "adStatus.in_delivery": "В доставці",
 
+  "adType.simple_ad": "Просте оголошення",
+  "adType.product": "Товар маркетплейсу",
+
   "time.justNow": "щойно",
   "time.minutesAgo": "хв. тому",
   "time.todayAt": "сьогодні о",
@@ -117,7 +125,7 @@
   "common.reloadPage": "Оновити сторінку",
   "common.logout": "Вийти",
   "common.or": "або",
-  "common.soon": "скоро",
+  "common.soon": "незабаром",
   "common.comingSoon": "Незабаром буде доступне!",
 
   "theme.switchToLight": "Перейти на світлу тему",

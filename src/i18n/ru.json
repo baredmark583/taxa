@@ -13,6 +13,9 @@
   "home.searchPlaceholder": "Поиск...",
   "home.createAdButtonLabel": "Создать новое объявление",
   "home.noResults": "Ничего не найдено",
+  "home.filterAll": "Все",
+  "home.filterSimpleAds": "Объявления",
+  "home.filterProducts": "Товары",
   "categories": "Все,Электроника,Мебель,Одежда,Транспорт,Недвижимость,Хобби,Детские товары,Другое",
 
   "adCard.reserved": "В резерве",
@@ -24,6 +27,8 @@
   "adDetail.description": "Описание",
   "adDetail.writeToSeller": "Написать продавцу",
   "adDetail.edit": "Редактировать",
+  "adDetail.addToCart": "Добавить в корзину",
+  "adDetail.adType": "Тип",
   "adDetail.category": "Категория",
   "adDetail.location": "Местоположение",
   "adDetail.published": "Опубликовано",
@@ -106,6 +111,9 @@
   "adStatus.sold": "Продано",
   "adStatus.archived": "В архиве",
   "adStatus.in_delivery": "В доставке",
+
+  "adType.simple_ad": "Простое объявление",
+  "adType.product": "Товар маркетплейса",
 
   "time.justNow": "только что",
   "time.minutesAgo": "мин. назад",

@@ -36,6 +36,13 @@ const BoostBadge: React.FC = () => (
     </div>
 );
 
+const ProductBadge: React.FC = () => (
+    <div className="absolute top-3 right-12 p-2 bg-white/70 dark:bg-black/40 rounded-full text-foreground dark:text-white backdrop-blur-sm z-10" title="Цей товар можна буде купити онлайн">
+        <Icon icon="lucide:shopping-cart" className="h-5 w-5" />
+    </div>
+);
+
+
 const FavoriteButton: React.FC<{ isFavorite: boolean, onClick: (e: React.MouseEvent) => void }> = ({ isFavorite, onClick }) => {
   const { t } = useI18n();
   return (
@@ -76,6 +83,7 @@ const AdCard: React.FC<AdCardProps> = ({ ad, isFavorite, onToggleFavorite }) => 
              {(ad.status === 'sold' || ad.status === 'archived') && <div className="absolute inset-0 bg-white/30 dark:bg-black/30"></div>}
             
             {ad.isBoosted ? <BoostBadge /> : <StatusBadge status={ad.status} />}
+            {ad.type === 'product' && <ProductBadge />}
             <FavoriteButton isFavorite={isFavorite} onClick={handleFavoriteClick} />
         </div>
       

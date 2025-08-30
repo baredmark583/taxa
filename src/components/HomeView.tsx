@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { type Ad, type Page, HomePageBanner, RegionStat, Category } from '../types';
+import { type Ad, type Page, HomePageBanner, RegionStat, Category, AdType } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
 import { getAds, getBanner, getAdStatsByRegion, getCategories } from '../apiClient';
@@ -18,6 +18,7 @@ interface HomeViewProps {
 }
 
 type SortBy = 'date' | 'price_asc' | 'price_desc';
+type AdTypeFilter = 'all' | AdType;
 
 const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
@@ -46,15 +47,17 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>('date');
+  const [adTypeFilter, setAdTypeFilter] = useState<AdTypeFilter>('all');
   
   const fetchAdsAndData = useCallback(
-    async (search: string, category: string, sort: SortBy, region: string | null) => {
+    async (search: string, category: string, sort: SortBy, region: string | null, type: AdTypeFilter) => {
       setIsLoading(true);
       try {
         const apiCategory = category === t('categories').split(',')[0] ? 'Все' : category;
+        const apiType = type === 'all' ? undefined : type;
         
         const [adsResponse, bannerResponse, statsResponse, categoriesResponse] = await Promise.all([
-          getAds({ search, category: apiCategory, sortBy: sort, region: region || undefined }),
+          getAds({ search, category: apiCategory, sortBy: sort, region: region || undefined, type: apiType }),
           getBanner(),
           getAdStatsByRegion(),
           getCategories()
@@ -77,12 +80,12 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
   const debouncedFetchAds = useMemo(() => debounce(fetchAdsAndData, 300), [fetchAdsAndData]);
 
   useEffect(() => {
-    fetchAdsAndData(searchQuery, selectedCategory, sortBy, selectedRegion);
+    fetchAdsAndData(searchQuery, selectedCategory, sortBy, selectedRegion, adTypeFilter);
   }, []); 
 
   useEffect(() => {
-    debouncedFetchAds(searchQuery, selectedCategory, sortBy, selectedRegion);
-  }, [searchQuery, selectedCategory, sortBy, selectedRegion, debouncedFetchAds]);
+    debouncedFetchAds(searchQuery, selectedCategory, sortBy, selectedRegion, adTypeFilter);
+  }, [searchQuery, selectedCategory, sortBy, selectedRegion, adTypeFilter, debouncedFetchAds]);
 
   const AdGrid: React.FC = () => (
     <>
@@ -160,6 +163,11 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
             className="w-full bg-white dark:bg-tg-secondary-bg p-3 pl-4 rounded-lg border border-gray-300 dark:border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
             />
        </div>
+       <div className="mb-4 flex space-x-2 bg-gray-200 dark:bg-tg-bg p-1 rounded-lg">
+            <button onClick={() => setAdTypeFilter('all')} className={`w-full text-center px-3 py-2 rounded-md font-semibold transition-colors ${adTypeFilter === 'all' ? 'bg-white dark:bg-tg-secondary-bg shadow' : 'text-gray-600 dark:text-tg-hint'}`}>{t('home.filterAll')}</button>
+            <button onClick={() => setAdTypeFilter('simple_ad')} className={`w-full text-center px-3 py-2 rounded-md font-semibold transition-colors ${adTypeFilter === 'simple_ad' ? 'bg-white dark:bg-tg-secondary-bg shadow' : 'text-gray-600 dark:text-tg-hint'}`}>{t('home.filterSimpleAds')}</button>
+            <button onClick={() => setAdTypeFilter('product')} className={`w-full text-center px-3 py-2 rounded-md font-semibold transition-colors ${adTypeFilter === 'product' ? 'bg-white dark:bg-tg-secondary-bg shadow' : 'text-gray-600 dark:text-tg-hint'}`}>{t('home.filterProducts')}</button>
+        </div>
         <div className="mb-4 overflow-x-auto pb-2 -mx-4 px-4">
             <div className="flex space-x-2">
             {categories.map(category => (

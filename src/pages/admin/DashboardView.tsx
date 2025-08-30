@@ -22,11 +22,12 @@ const StatCard: React.FC<{ title: string; value: number | string; icon: string }
 const DashboardView: React.FC<DashboardViewProps> = ({ stats }) => {
     return (
         <div className="p-4 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <StatCard title="Всього користувачів" value={stats.totalUsers} icon="lucide:users" />
                 <StatCard title="Всього оголошень" value={stats.totalAds} icon="lucide:layout-list" />
-                 <StatCard title="Продано товарів" value={stats.soldAds} icon="lucide:package-check" />
+                <StatCard title="Продано товарів" value={stats.soldAds} icon="lucide:package-check" />
                 <StatCard title="Заблоковано" value={stats.bannedUsers} icon="lucide:user-x" />
+                <StatCard title="Всього бонусів" value={stats.totalBonuses} icon="lucide:star" />
             </div>
 
             <div>

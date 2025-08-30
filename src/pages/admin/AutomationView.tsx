@@ -14,7 +14,9 @@ import ReactFlow, {
   Handle,
   Position,
   NodeProps,
+  ReactFlowInstance,
 } from 'reactflow';
+import cuid from 'cuid';
 import { Icon } from '@iconify/react';
 import { getAutomationFlow, saveAutomationFlow, getAutomationHistory } from '../../apiClient';
 import Spinner from '../../components/Spinner';
@@ -154,10 +156,43 @@ interface AutomationViewProps {
     showToast: (message: string) => void;
 }
 
-const initialNodes: Node[] = [
-  { id: '1', type: 'triggerNode', data: { label: 'Користувач зареєструвався' }, position: { x: 50, y: 150 } },
-  { id: '2', type: 'actionNode', data: { label: 'Відправити Email привітання' }, position: { x: 350, y: 50 } },
-  { id: '3', type: 'logNode', data: { label: 'Записати лог про реєстрацію' }, position: { x: 350, y: 250 } },
+const availableTriggers = [
+    { type: 'USER_REGISTERED', label: 'Користувач зареєструвався' },
+    { type: 'NEW_AD_POSTED', label: 'Нове оголошення створено' },
+    { type: 'AD_STATUS_CHANGED_SOLD', label: 'Статус змінено на "Продано"' },
+    { type: 'USER_BANNED', label: 'Користувача заблоковано' },
+    { type: 'NEW_MESSAGE_RECEIVED', label: 'Отримано нове повідомлення' },
+    { type: 'USER_ADD_FAVORITE', label: 'Користувач додав в обране' },
+    { type: 'NEW_REVIEW_PUBLISHED', label: 'Новий відгук опубліковано' },
+    { type: 'USER_LOGIN', label: 'Користувач увійшов' },
+    { type: 'AD_VIEWED_100_TIMES', label: 'Оголошення переглянули 100 разів' },
+    { type: 'USER_NOT_ACTIVE_7_DAYS', label: 'Користувач неактивний 7 днів' },
+    { type: 'AD_EXPIRING_SOON', label: 'Термін публікації спливає' },
+    { type: 'USER_UPDATED_PROFILE', label: 'Користувач оновив профіль' },
+    { type: 'OFFER_RECEIVED', label: 'Отримано цінову пропозицію' },
+    { type: 'PAYMENT_SUCCESSFUL', label: 'Платіж успішно проведено' },
+    { type: 'NEW_FOLLOWER', label: 'З\'явився новий підписник' },
+    { type: 'AD_BOOSTED', label: 'Оголошення було просунуто' },
+    { type: 'SEARCH_SAVED', label: 'Збережено новий пошук' },
+    { type: 'DAILY_SUMMARY', label: 'Щоденний звіт (за часом)' },
+];
+
+const availableActions = [
+    { type: 'action', label: 'Відправити Email привітання' },
+    { type: 'log', label: 'Записати лог про реєстрацію' },
+    { type: 'action', label: 'Надіслати Telegram-сповіщення користувачу' },
+    { type: 'action', label: 'Надіслати Telegram-сповіщення адміну' },
+    { type: 'action', label: 'Заблокувати користувача' },
+    { type: 'action', label: 'Нарахувати бонуси' },
+    { type: 'action', label: 'Змінити статус оголошення на "В резерві"' },
+    { type: 'action', label: 'Додати тег "Перевірено"' },
+    { type: 'action', label: 'Перевірити опис на стоп-слова' },
+    { type: 'action', label: 'Опублікувати в Telegram-каналі' },
+    { type: 'action', label: 'Зменшити ціну на 5%' },
+    { type: 'action', label: 'Призначити VIP-статус користувачу' },
+    { type: 'action', label: 'Створити задачу для модератора' },
+    { type: 'action', label: 'Зачекати 1 годину' },
+    { type: 'action', label: 'Відправити SMS-повідомлення' },
 ];
 
 const TriggerNode: React.FC<NodeProps> = ({ data }) => (
@@ -171,8 +206,20 @@ const LogNode: React.FC<NodeProps> = ({ data }) => (
 );
 
 const nodeTypes = { triggerNode: TriggerNode, actionNode: ActionNode, logNode: LogNode };
-const TRIGGER_TYPE = 'USER_REGISTERED';
 const FLOW_NAME = 'User Registration Flow';
+
+const PaletteItem: React.FC<{ label: string, type: string, icon: string, nodeType: string }> = ({ label, type, icon, nodeType }) => {
+    const onDragStart = (event: React.DragEvent) => {
+        event.dataTransfer.setData('application/reactflow', JSON.stringify({ type: nodeType, label }));
+        event.dataTransfer.effectAllowed = 'move';
+    };
+    return (
+        <div draggable onDragStart={onDragStart} className="flex items-center gap-2 p-2 rounded-md bg-tg-bg hover:bg-tg-secondary-bg-hover cursor-grab">
+            <Icon icon={icon} className="node-icon" />
+            <span className="text-sm">{label}</span>
+        </div>
+    );
+};
 
 const AutomationView: React.FC<AutomationViewProps> = ({ showToast }) => {
     const [nodes, setNodes] = useState<Node[]>([]);
@@ -180,23 +227,32 @@ const AutomationView: React.FC<AutomationViewProps> = ({ showToast }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<'editor' | 'history'>('editor');
+    const [selectedTrigger, setSelectedTrigger] = useState(availableTriggers[0].type);
+    const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
+
+    const onNodesChange: OnNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+    const onEdgesChange: OnEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+    const onConnect: OnConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), []);
 
     useEffect(() => {
         if (activeTab === 'editor') {
             const loadFlow = async () => {
                 setIsLoading(true);
                 try {
-                    const { data } = await getAutomationFlow(TRIGGER_TYPE);
+                    const { data } = await getAutomationFlow(selectedTrigger);
                     if (data.flowData && data.flowData.nodes) {
                         setNodes(data.flowData.nodes);
                         setEdges(data.flowData.edges || []);
                     } else {
-                        setNodes(initialNodes);
+                        // Start with a clean slate for a new trigger
+                        const triggerNodeData = availableTriggers.find(t => t.type === selectedTrigger);
+                        setNodes([{ id: '1', type: 'triggerNode', data: { label: triggerNodeData?.label, isTrigger: true }, position: { x: 50, y: 150 }, deletable: false }]);
                         setEdges([]);
                     }
                 } catch (error: any) {
                     if (error.response?.status === 404) {
-                        setNodes(initialNodes);
+                         const triggerNodeData = availableTriggers.find(t => t.type === selectedTrigger);
+                        setNodes([{ id: '1', type: 'triggerNode', data: { label: triggerNodeData?.label, isTrigger: true }, position: { x: 50, y: 150 }, deletable: false }]);
                         setEdges([]);
                     } else {
                         showToast('Помилка завантаження сценарію.');
@@ -207,17 +263,14 @@ const AutomationView: React.FC<AutomationViewProps> = ({ showToast }) => {
             };
             loadFlow();
         }
-    }, [showToast, activeTab]);
-
-    const onNodesChange: OnNodesChange = useCallback((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
-    const onEdgesChange: OnEdgesChange = useCallback((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
-    const onConnect: OnConnect = useCallback((connection) => setEdges((eds) => addEdge(connection, eds)), []);
+    }, [showToast, activeTab, selectedTrigger]);
 
     const handleSave = async () => {
         setIsSaving(true);
         try {
             const flowData = { nodes, edges };
-            await saveAutomationFlow(FLOW_NAME, TRIGGER_TYPE, flowData);
+            const flowName = availableTriggers.find(t => t.type === selectedTrigger)?.label || 'Automation Flow';
+            await saveAutomationFlow(flowName, selectedTrigger, flowData);
             showToast('Сценарій успішно збережено!');
         } catch (error) {
             showToast('Помилка при збереженні сценарію.');
@@ -225,33 +278,78 @@ const AutomationView: React.FC<AutomationViewProps> = ({ showToast }) => {
             setIsSaving(false);
         }
     };
+    
+    const onDragOver = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+    }, []);
 
-    const renderEditor = () => {
-        if (isLoading) {
-            return <div className="flex justify-center items-center h-full"><Spinner size="lg" /></div>;
-        }
-        return (
-            <div className="w-full h-full relative">
-                 <ReactFlow nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} fitView>
-                    <Controls />
-                    <MiniMap />
-                    <Background gap={16} color="#2f3f50" />
-                </ReactFlow>
-                <div className="absolute top-4 right-4 flex gap-4">
-                    <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 bg-tg-button text-tg-button-text font-bold rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2">
-                        {isSaving ? <Spinner size="sm" /> : <Icon icon="lucide:save" />}
-                        {isSaving ? 'Збереження...' : 'Зберегти'}
-                    </button>
+    const onDrop = useCallback((event: React.DragEvent) => {
+        event.preventDefault();
+        if (!reactFlowInstance) return;
+
+        const dataString = event.dataTransfer.getData('application/reactflow');
+        if (!dataString) return;
+
+        const { type, label } = JSON.parse(dataString);
+        const position = reactFlowInstance.screenToFlowPosition({
+            x: event.clientX,
+            y: event.clientY,
+        });
+        const newNode = {
+            id: cuid(),
+            type,
+            position,
+            data: { label },
+        };
+        setNodes((nds) => nds.concat(newNode));
+    }, [reactFlowInstance]);
+
+    const renderEditor = () => (
+        <div className="flex w-full h-full">
+            <div className="w-64 h-full bg-tg-secondary-bg p-2 overflow-y-auto flex-shrink-0">
+                <h3 className="font-bold mb-2 p-2">Дії</h3>
+                <div className="space-y-2">
+                    {availableActions.map(action => (
+                        <PaletteItem key={action.label} label={action.label} type="action" nodeType={action.type === 'log' ? 'logNode' : 'actionNode'} icon={action.type === 'log' ? 'lucide:terminal' : 'lucide:send'} />
+                    ))}
                 </div>
             </div>
-        );
-    };
+            <div className="flex-grow relative" onDrop={onDrop} onDragOver={onDragOver}>
+                {isLoading ? <div className="flex justify-center items-center h-full"><Spinner size="lg" /></div> :
+                    // FIX: Changed deprecated `onLoad` prop to `onInit` for newer react-flow versions.
+                    <ReactFlow
+                        nodes={nodes} edges={edges} onNodesChange={onNodesChange}
+                        onEdgesChange={onEdgesChange} onConnect={onConnect}
+                        nodeTypes={nodeTypes} fitView onInit={setReactFlowInstance}
+                    >
+                        <Controls />
+                        <MiniMap />
+                        <Background gap={16} color="#2f3f50" />
+                    </ReactFlow>
+                }
+            </div>
+        </div>
+    );
 
     return (
         <div className="w-full h-[75vh] bg-tg-bg rounded-lg overflow-hidden flex flex-col">
-            <div className="flex border-b border-tg-border flex-shrink-0">
-                <button onClick={() => setActiveTab('editor')} className={`px-4 py-2 font-semibold ${activeTab === 'editor' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Редактор</button>
-                <button onClick={() => setActiveTab('history')} className={`px-4 py-2 font-semibold ${activeTab === 'history' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Історія запусків</button>
+            <div className="flex justify-between items-center border-b border-tg-border flex-shrink-0 p-2">
+                 <div className="flex">
+                    <button onClick={() => setActiveTab('editor')} className={`px-4 py-2 font-semibold ${activeTab === 'editor' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Редактор</button>
+                    <button onClick={() => setActiveTab('history')} className={`px-4 py-2 font-semibold ${activeTab === 'history' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Історія запусків</button>
+                </div>
+                {activeTab === 'editor' && (
+                    <div className="flex items-center gap-4">
+                         <select value={selectedTrigger} onChange={e => setSelectedTrigger(e.target.value)} className="bg-tg-secondary-bg p-2 rounded-lg border border-tg-border text-sm">
+                            {availableTriggers.map(t => <option key={t.type} value={t.type}>{t.label}</option>)}
+                        </select>
+                        <button onClick={handleSave} disabled={isSaving} className="px-4 py-2 bg-tg-button text-tg-button-text font-bold rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center gap-2">
+                            {isSaving ? <Spinner size="sm" /> : <Icon icon="lucide:save" />}
+                            {isSaving ? 'Збереження...' : 'Зберегти'}
+                        </button>
+                    </div>
+                )}
             </div>
             <div className="flex-grow min-h-0">
                 {activeTab === 'editor' ? renderEditor() : <ExecutionHistoryPanel />}

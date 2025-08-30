@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { getAdminUsers, deleteAdminUser, getAdminAds, deleteAdminAd, getAdminStats, getAdminAnalytics, updateAdminUser, updateAdminAd } from '../apiClient';
-import { AdminUser, AdminAd, AdminStats, AnalyticsData, UserStatus, UserRole, AdStatus } from '../types';
+import { AdminUser, AdminAd, AdminStats, AnalyticsData, UserStatus, UserRole, AdStatus, AdType } from '../types';
 import Spinner from '../components/Spinner';
 import UserMap from './UserMap';
 import DashboardView from './admin/DashboardView';
@@ -49,6 +49,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
     const [userSearch, setUserSearch] = useState('');
     const [adSearch, setAdSearch] = useState('');
     const [adStatusFilter, setAdStatusFilter] = useState('all');
+    const [adTypeFilter, setAdTypeFilter] = useState('all');
     
     // State for modals
     const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
@@ -86,6 +87,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                 name: userToUpdate.name,
                 role: userToUpdate.role,
                 status: userToUpdate.status,
+                bonuses: userToUpdate.bonuses,
             });
             setUsers(prev => prev.map(u => u.id === updatedUser.data.id ? updatedUser.data : u));
             showToast('User updated successfully.');
@@ -103,6 +105,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                 price: adToUpdate.price,
                 status: adToUpdate.status,
                 isBoosted: adToUpdate.isBoosted,
+                type: adToUpdate.type,
             });
             setAds(prev => prev.map(a => a.id === updatedAd.data.id ? updatedAd.data : a));
             showToast('Ad updated successfully.');
@@ -148,9 +151,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
         return ads.filter(ad => {
             const matchesSearch = ad.title.toLowerCase().includes(adSearch.toLowerCase());
             const matchesStatus = adStatusFilter === 'all' || ad.status === adStatusFilter;
-            return matchesSearch && matchesStatus;
+            const matchesType = adTypeFilter === 'all' || ad.type === adTypeFilter;
+            return matchesSearch && matchesStatus && matchesType;
         });
-    }, [ads, adSearch, adStatusFilter]);
+    }, [ads, adSearch, adStatusFilter, adTypeFilter]);
 
     const renderContent = () => {
         if (isLoading) return <div className="flex justify-center p-8"><Spinner /></div>;
@@ -177,13 +181,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b border-tg-border"><tr >
-                                    <th className="p-2">Name</th><th className="p-2">Email</th><th className="p-2">Status</th><th className="p-2">Role</th><th className="p-2">Actions</th>
+                                    <th className="p-2">Name</th><th className="p-2">Email</th><th className="p-2">Status</th><th className="p-2">Role</th><th className="p-2">Bonuses</th><th className="p-2">Actions</th>
                                 </tr></thead>
                                 <tbody>
                                     {filteredUsers.map(user => (<tr key={user.id} className="border-b border-tg-border hover:bg-tg-secondary-bg-hover">
                                         <td className="p-2">{user.name}</td><td className="p-2">{user.email}</td>
                                         <td className="p-2"><span className={`px-2 py-1 text-xs rounded-full ${user.status === 'active' ? 'bg-green-500/30 text-green-300' : 'bg-red-500/30 text-red-300'}`}>{user.status}</span></td>
                                         <td className="p-2">{user.role}</td>
+                                        <td className="p-2">{user.bonuses}</td>
                                         <td className="p-2 space-x-2">
                                             <button onClick={() => setEditingUser(user)} className="text-blue-400 hover:text-blue-600">Edit</button>
                                             <button onClick={() => handleDeleteUser(user.id)} className="text-red-400 hover:text-red-600">Delete</button>
@@ -201,16 +206,21 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                             <select value={adStatusFilter} onChange={(e) => setAdStatusFilter(e.target.value)} className="w-full sm:w-auto bg-tg-bg p-2 rounded-lg border border-tg-border">
                                 <option value="all">Всі статуси</option><option value="active">Active</option><option value="reserved">Reserved</option><option value="sold">Sold</option><option value="archived">Archived</option>
                             </select>
+                             <select value={adTypeFilter} onChange={(e) => setAdTypeFilter(e.target.value)} className="w-full sm:w-auto bg-tg-bg p-2 rounded-lg border border-tg-border">
+                                <option value="all">Всі типи</option><option value="simple_ad">Просте оголошення</option><option value="product">Товар маркетплейсу</option>
+                            </select>
                         </div>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm">
                                 <thead className="border-b border-tg-border"><tr>
-                                    <th className="p-2">Boost</th><th className="p-2">Title</th><th className="p-2">Seller</th><th className="p-2">Price</th><th className="p-2">Status</th><th className="p-2">Actions</th>
+                                    <th className="p-2">Boost</th><th className="p-2">Title</th><th className="p-2">Тип</th><th className="p-2">Seller</th><th className="p-2">Price</th><th className="p-2">Status</th><th className="p-2">Actions</th>
                                 </tr></thead>
                                 <tbody>
                                     {filteredAds.map(ad => (<tr key={ad.id} className="border-b border-tg-border hover:bg-tg-secondary-bg-hover">
                                         <td className="p-2 text-center">{ad.isBoosted && <Icon icon="lucide:flame" className="text-orange-400" />}</td>
-                                        <td className="p-2 truncate max-w-xs">{ad.title}</td><td className="p-2">{ad.sellerName}</td><td className="p-2">{ad.price}</td><td className="p-2">{ad.status}</td>
+                                        <td className="p-2 truncate max-w-xs">{ad.title}</td>
+                                        <td className="p-2"><span className={`px-2 py-1 text-xs rounded-full ${ad.type === 'product' ? 'bg-sky-500/30 text-sky-300' : 'bg-gray-500/30 text-gray-300'}`}>{ad.type === 'product' ? 'Товар' : 'Просте'}</span></td>
+                                        <td className="p-2">{ad.sellerName}</td><td className="p-2">{ad.price}</td><td className="p-2">{ad.status}</td>
                                         <td className="p-2 space-x-2">
                                             <button onClick={() => setEditingAd(ad)} className="text-blue-400 hover:text-blue-600">Edit</button>
                                             <button onClick={() => handleDeleteAd(ad.id)} className="text-red-400 hover:text-red-600">Delete</button>
@@ -256,12 +266,14 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
 const UserEditForm: React.FC<{user: AdminUser, onSave: (user: AdminUser) => void, onCancel: () => void}> = ({ user, onSave, onCancel }) => {
     const [formData, setFormData] = useState(user);
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        const { name, value, type } = e.target;
+        setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseInt(value, 10) : value }));
     };
     return (<form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-4">
         <div><label className="block text-sm font-medium text-tg-hint">Name</label><input type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border" /></div>
         <div><label className="block text-sm font-medium text-tg-hint">Role</label><select name="role" value={formData.role} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border"><option value="USER">USER</option><option value="ADMIN">ADMIN</option></select></div>
         <div><label className="block text-sm font-medium text-tg-hint">Status</label><select name="status" value={formData.status} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border"><option value="active">active</option><option value="banned">banned</option></select></div>
+        <div><label className="block text-sm font-medium text-tg-hint">Bonuses</label><input type="number" name="bonuses" value={formData.bonuses} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border" /></div>
         <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={onCancel} className="px-4 py-2 bg-tg-secondary-bg-hover rounded-lg">Cancel</button><button type="submit" className="px-4 py-2 bg-tg-button text-tg-button-text rounded-lg">Save</button></div>
     </form>);
 };
@@ -278,6 +290,7 @@ const AdEditForm: React.FC<{ad: AdminAd, onSave: (ad: AdminAd) => void, onCancel
         <div><label className="block text-sm font-medium text-tg-hint">Description</label><textarea name="description" value={formData.description} onChange={handleChange} rows={4} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border" /></div>
         <div><label className="block text-sm font-medium text-tg-hint">Price</label><input type="text" name="price" value={formData.price} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border" /></div>
         <div><label className="block text-sm font-medium text-tg-hint">Status</label><select name="status" value={formData.status} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border"><option value="active">active</option><option value="reserved">reserved</option><option value="sold">sold</option><option value="archived">archived</option></select></div>
+        <div><label className="block text-sm font-medium text-tg-hint">Тип оголошення</label><select name="type" value={formData.type} onChange={handleChange} className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border"><option value="simple_ad">Просте оголошення</option><option value="product">Товар маркетплейсу</option></select></div>
         <div className="flex items-center"><input type="checkbox" name="isBoosted" id="isBoosted" checked={formData.isBoosted} onChange={handleChange} className="h-4 w-4 rounded border-tg-border bg-tg-bg text-tg-link focus:ring-tg-link" /><label htmlFor="isBoosted" className="ml-2 block text-sm text-tg-text">Boost Ad</label></div>
         <div className="flex justify-end gap-2 pt-4"><button type="button" onClick={onCancel} className="px-4 py-2 bg-tg-secondary-bg-hover rounded-lg">Cancel</button><button type="submit" className="px-4 py-2 bg-tg-button text-tg-button-text rounded-lg">Save</button></div>
     </form>);

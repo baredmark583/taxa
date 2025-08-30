@@ -126,6 +126,14 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ showToast, isFavorite, onTo
                  <Link to={`/edit/${ad.id}`} className="w-full bg-tg-secondary-bg-hover text-tg-text font-bold py-3 px-6 rounded-lg transition-colors text-center">
                     {t('adDetail.edit')}
                  </Link>
+            ) : ( ad.type === 'product' ? (
+                <div className="w-full">
+                    <button disabled className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg opacity-50 cursor-not-allowed flex items-center justify-center gap-2">
+                        <Icon icon="lucide:shopping-cart" className="h-6 w-6" />
+                        {t('adDetail.addToCart')}
+                    </button>
+                    <p className="text-center text-xs text-tg-hint mt-1">{t('common.soon')}</p>
+                </div>
             ) : (
                 <>
                 <button onClick={handleStartChat} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors text-center">
@@ -135,6 +143,7 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ showToast, isFavorite, onTo
                     <Icon icon="lucide:heart" className={`h-6 w-6 ${isFavorite.has(ad.id) ? 'fill-current' : ''}`} />
                 </button>
                 </>
+            )
             )}
         </div>
         <div>
@@ -145,7 +154,8 @@ const AdDetailView: React.FC<AdDetailViewProps> = ({ showToast, isFavorite, onTo
             <div><div className="flex flex-wrap gap-2">{ad.tags.map((tag, index) => (<span key={index} className="bg-tg-secondary-bg px-3 py-1 rounded-full text-sm text-tg-hint">#{tag}</span>))}</div></div>
         )}
         <div className="text-sm text-tg-hint border-t border-tg-border pt-4 mt-6">
-            <div className="flex justify-between"><span>{t('adDetail.category')}:</span> <span className="text-tg-text">{ad.category}</span></div>
+            <div className="flex justify-between"><span>{t('adDetail.adType')}:</span> <span className="text-tg-text">{t(`adType.${ad.type}`)}</span></div>
+            <div className="flex justify-between mt-1"><span>{t('adDetail.category')}:</span> <span className="text-tg-text">{ad.category}</span></div>
             <div className="flex justify-between mt-1"><span>{t('adDetail.location')}:</span> <span className="text-tg-text">{ad.location}</span></div>
             <div className="flex justify-between mt-1"><span>{t('adDetail.published')}:</span> <span className="text-tg-text">{formatRelativeDate(ad.createdAt, t)}</span></div>
         </div>

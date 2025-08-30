@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { getAdminSettings, updateAdminSettings } from '../../apiClient';
-import { StorageSettings } from '../../types';
+import { PlatformSettings } from '../../types';
 import Spinner from '../../components/Spinner';
 
 interface SettingsViewProps {
     showToast: (message: string) => void;
 }
 
-const InputField: React.FC<{ label: string; name: keyof StorageSettings; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string, placeholder?: string }> = 
+const InputField: React.FC<{ label: string; name: keyof PlatformSettings; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string, placeholder?: string }> = 
     ({ label, name, value, onChange, type = 'text', placeholder }) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-tg-hint">{label}</label>
@@ -24,7 +24,7 @@ const InputField: React.FC<{ label: string; name: keyof StorageSettings; value: 
 );
 
 const SettingsView: React.FC<SettingsViewProps> = ({ showToast }) => {
-    const [settings, setSettings] = useState<Partial<StorageSettings> | null>(null);
+    const [settings, setSettings] = useState<Partial<PlatformSettings> | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
@@ -71,58 +71,72 @@ const SettingsView: React.FC<SettingsViewProps> = ({ showToast }) => {
     }
 
     return (
-        <div className="p-4 space-y-6 max-w-2xl mx-auto">
-            <h2 className="text-xl font-bold text-tg-text">Налаштування сховища файлів</h2>
-            
-            <div className="bg-tg-secondary-bg-hover p-4 rounded-lg space-y-4">
-                <div>
-                    <label htmlFor="storage_provider" className="block text-sm font-medium text-tg-hint">Провайдер</label>
-                    <select
-                        id="storage_provider"
-                        name="storage_provider"
-                        value={settings.storage_provider || 'local'}
-                        onChange={handleChange}
-                        className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
-                    >
-                        <option value="local">Локальний сервер</option>
-                        <option value="s3">Amazon S3</option>
-                        <option value="gcs">Google Cloud Storage</option>
-                    </select>
-                     <p className="text-xs text-tg-hint mt-1">Оберіть, де будуть зберігатися нові завантажені фотографії.</p>
+        <div className="p-4 space-y-8 max-w-2xl mx-auto">
+            {/* --- General Settings --- */}
+            <div className="space-y-4">
+                 <h2 className="text-xl font-bold text-tg-text">Загальні налаштування</h2>
+                 <div className="bg-tg-secondary-bg-hover p-4 rounded-lg space-y-4">
+                    <InputField label="Назва сайту" name="site_name" value={settings.site_name || ''} onChange={handleChange} />
+                    <InputField label="URL Логотипа" name="site_logo_url" value={settings.site_logo_url || ''} onChange={handleChange} placeholder="https://.../logo.png"/>
+                    <InputField label="Валюта за замовчуванням" name="default_currency" value={settings.default_currency || ''} onChange={handleChange} placeholder="напр. ₴, $, €"/>
+                    <InputField label="Контактний Email" name="admin_contact_email" value={settings.admin_contact_email || ''} onChange={handleChange} type="email" placeholder="для зворотнього зв'язку"/>
                 </div>
-
-                {settings.storage_provider === 's3' && (
-                    <div className="space-y-4 border-t border-tg-border pt-4 mt-4 animate-modal-fade-in">
-                        <h3 className="font-semibold text-tg-text">Налаштування Amazon S3</h3>
-                        <InputField label="Bucket Name" name="s3_bucket" value={settings.s3_bucket || ''} onChange={handleChange} />
-                        <InputField label="Region" name="s3_region" value={settings.s3_region || ''} onChange={handleChange} placeholder="e.g., eu-central-1" />
-                        <InputField label="Access Key ID" name="s3_access_key_id" value={settings.s3_access_key_id || ''} onChange={handleChange} />
-                        <InputField label="Secret Access Key" name="s3_secret_access_key" value={settings.s3_secret_access_key || ''} onChange={handleChange} type="password" placeholder="Залиште пустим, щоб не змінювати" />
-                    </div>
-                )}
-
-                {settings.storage_provider === 'gcs' && (
-                     <div className="space-y-4 border-t border-tg-border pt-4 mt-4 animate-modal-fade-in">
-                        <h3 className="font-semibold text-tg-text">Налаштування Google Cloud Storage</h3>
-                        <InputField label="Bucket Name" name="gcs_bucket" value={settings.gcs_bucket || ''} onChange={handleChange} />
-                        <InputField label="Project ID" name="gcs_project_id" value={settings.gcs_project_id || ''} onChange={handleChange} />
-                        <div>
-                            <label htmlFor="gcs_credentials" className="block text-sm font-medium text-tg-hint">Service Account Key (JSON)</label>
-                            <textarea
-                                name="gcs_credentials"
-                                id="gcs_credentials"
-                                value={settings.gcs_credentials || ''}
-                                onChange={handleChange}
-                                rows={5}
-                                placeholder="Вставте вміст JSON файлу. Залиште пустим, щоб не змінювати."
-                                className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none font-mono text-xs"
-                            />
-                        </div>
-                    </div>
-                )}
             </div>
 
-            <div className="flex justify-end">
+            {/* --- Storage Settings --- */}
+            <div className="space-y-4">
+                 <h2 className="text-xl font-bold text-tg-text">Налаштування сховища файлів</h2>
+                <div className="bg-tg-secondary-bg-hover p-4 rounded-lg space-y-4">
+                    <div>
+                        <label htmlFor="storage_provider" className="block text-sm font-medium text-tg-hint">Провайдер</label>
+                        <select
+                            id="storage_provider"
+                            name="storage_provider"
+                            value={settings.storage_provider || 'local'}
+                            onChange={handleChange}
+                            className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none"
+                        >
+                            <option value="local">Локальний сервер</option>
+                            <option value="s3">Amazon S3</option>
+                            <option value="gcs">Google Cloud Storage</option>
+                        </select>
+                         <p className="text-xs text-tg-hint mt-1">Оберіть, де будуть зберігатися нові завантажені фотографії.</p>
+                    </div>
+
+                    {settings.storage_provider === 's3' && (
+                        <div className="space-y-4 border-t border-tg-border pt-4 mt-4 animate-modal-fade-in">
+                            <h3 className="font-semibold text-tg-text">Налаштування Amazon S3</h3>
+                            <InputField label="Bucket Name" name="s3_bucket" value={settings.s3_bucket || ''} onChange={handleChange} />
+                            <InputField label="Region" name="s3_region" value={settings.s3_region || ''} onChange={handleChange} placeholder="e.g., eu-central-1" />
+                            <InputField label="Access Key ID" name="s3_access_key_id" value={settings.s3_access_key_id || ''} onChange={handleChange} />
+                            <InputField label="Secret Access Key" name="s3_secret_access_key" value={settings.s3_secret_access_key || ''} onChange={handleChange} type="password" placeholder="Залиште пустим, щоб не змінювати" />
+                        </div>
+                    )}
+
+                    {settings.storage_provider === 'gcs' && (
+                         <div className="space-y-4 border-t border-tg-border pt-4 mt-4 animate-modal-fade-in">
+                            <h3 className="font-semibold text-tg-text">Налаштування Google Cloud Storage</h3>
+                            <InputField label="Bucket Name" name="gcs_bucket" value={settings.gcs_bucket || ''} onChange={handleChange} />
+                            <InputField label="Project ID" name="gcs_project_id" value={settings.gcs_project_id || ''} onChange={handleChange} />
+                            <div>
+                                <label htmlFor="gcs_credentials" className="block text-sm font-medium text-tg-hint">Service Account Key (JSON)</label>
+                                <textarea
+                                    name="gcs_credentials"
+                                    id="gcs_credentials"
+                                    value={settings.gcs_credentials || ''}
+                                    onChange={handleChange}
+                                    rows={5}
+                                    placeholder="Вставте вміст JSON файлу. Залиште пустим, щоб не змінювати."
+                                    className="w-full bg-tg-bg p-2 mt-1 rounded-lg border border-tg-border focus:ring-2 focus:ring-tg-link focus:outline-none font-mono text-xs"
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+
+            <div className="flex justify-end pt-4">
                 <button 
                     onClick={handleSave}
                     disabled={isSaving}

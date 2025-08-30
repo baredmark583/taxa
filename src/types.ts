@@ -46,6 +46,7 @@ export interface Ad {
     telegramUsername?: string; // Kept for legacy compatibility
   };
   status: AdStatus;
+  type: AdType;
   isBoosted: boolean;
    // Optional fields for component compatibility
   stats?: {
@@ -67,6 +68,7 @@ export interface GeneratedAdData {
 export type Page = 'home' | 'create' | 'detail' | 'profile' | 'favorites' | 'sellerProfile' | 'chats' | 'chatThread' | 'savedSearches' | 'map' | 'following' | 'auth';
 
 export type AdStatus = 'active' | 'reserved' | 'sold' | 'archived' | 'in_delivery';
+export type AdType = 'simple_ad' | 'product';
 export type UserStatus = 'active' | 'banned';
 export type UserRole = 'USER' | 'ADMIN';
 
@@ -91,6 +93,7 @@ export interface AdminUser extends User {
     longitude: number | null;
     city: string | null;
     status: UserStatus;
+    bonuses: number;
 }
 
 export interface AdminAd extends Ad {
@@ -105,6 +108,7 @@ export interface AdminStats {
   adsByCategory: { category: string; count: string }[];
   soldAds: number;
   bannedUsers: number;
+  totalBonuses: number;
 }
 
 export interface DailyCount {
@@ -117,7 +121,13 @@ export interface AnalyticsData {
     adPostings: DailyCount[];
 }
 
-export interface StorageSettings {
+export interface PlatformSettings {
+  // General settings
+  site_name: string;
+  site_logo_url: string;
+  default_currency: string;
+  admin_contact_email: string;
+  // Storage settings
   storage_provider: 'local' | 's3' | 'gcs';
   s3_bucket: string;
   s3_region: string;
