@@ -7,17 +7,29 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Эти цвета являются запасными/по умолчанию; классы Tailwind в index.html их переопределят */
-  background-color: #18222d;
-  color: #ffffff;
 }
 
-/* Для всплывающих окон карты Leaflet, чтобы цвет текста был правильным */
+/* Light theme styles for Leaflet popup */
 .leaflet-popup-content-wrapper, .leaflet-popup-tip {
-    background: #222e3a; /* tg-secondary-bg */
-    color: #ffffff; /* tg-text */
-    box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+    background: #ffffff;
+    color: #0d0d0d;
+    box-shadow: 0 3px 14px rgba(0,0,0,0.1);
 }
 .leaflet-container {
-    background-color: #18222d; /* tg-bg */
+    background-color: #f2f2f7; /* background */
+}
+
+/* Dark theme styles for Leaflet popup */
+.dark .leaflet-popup-content-wrapper, .dark .leaflet-popup-tip {
+    background: #1c1c1e; /* dark-card */
+    color: #f5f5f7; /* dark-foreground */
+    box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+.dark .leaflet-container {
+    background-color: #0d0d0d; /* dark-background */
+}
+
+/* Make sure map tiles are visible in dark mode without being too bright */
+.dark .leaflet-tile-container {
+    filter: brightness(0.8) contrast(1.1);
 }

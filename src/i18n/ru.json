@@ -118,5 +118,8 @@
   "common.logout": "Выйти",
   "common.or": "или",
   "common.soon": "скоро",
-  "common.comingSoon": "Скоро!"
+  "common.comingSoon": "Скоро!",
+
+  "theme.switchToLight": "Переключиться на светлую тему",
+  "theme.switchToDark": "Переключиться на темную тему"
 }

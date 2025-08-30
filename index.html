@@ -10,10 +10,46 @@
      crossorigin=""/>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
+      // Скрипт для установки темы до загрузки React, чтобы избежать мерцания (FOUC)
+      // Светлая тема по умолчанию. Темная тема применяется, только если она явно установлена в localStorage.
+      if (localStorage.theme === 'dark') {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+
       tailwind.config = {
+        darkMode: 'class', // Включаем поддержку темной темы на основе класса
         theme: {
           extend: {
             colors: {
+              // Light theme colors (defaults, can be customized)
+              'primary': '#007aff',
+              'primary-foreground': '#ffffff',
+              'background': '#ffffff',
+              'foreground': '#0d0d0d',
+              'card': '#f2f2f7',
+              'card-foreground': '#0d0d0d',
+              'muted': '#f2f2f7',
+              'muted-foreground': '#6b7280',
+              'border': '#e5e5ea',
+              'accent': '#f2f2f7',
+              'accent-foreground': '#0d0d0d',
+              
+              // Dark theme colors (prefixed with 'dark-')
+              'dark-primary': '#0a84ff',
+              'dark-primary-foreground': '#ffffff',
+              'dark-background': '#0d0d0d', // Near black
+              'dark-foreground': '#f5f5f7',
+              'dark-card': '#1c1c1e',
+              'dark-card-foreground': '#f5f5f7',
+              'dark-muted': '#1c1c1e',
+              'dark-muted-foreground': '#9ca3af',
+              'dark-border': '#3a3a3c',
+              'dark-accent': '#1c1c1e',
+              'dark-accent-foreground': '#f5f5f7',
+
+              // Telegram colors for Mini App consistency
               'tg-bg': '#18222d',
               'tg-text': '#ffffff',
               'tg-hint': '#b1c3d5',
@@ -93,7 +129,7 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-<body class="bg-tg-bg text-tg-text font-sans">
+<body class="bg-background dark:bg-dark-background text-foreground dark:text-dark-foreground font-sans transition-colors duration-300">
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
 <script type="module" src="/index.tsx"></script>

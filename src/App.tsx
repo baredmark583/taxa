@@ -47,7 +47,7 @@ const MobileLayout: React.FC = () => {
     const currentPage = getCurrentPage();
 
     return (
-        <div className="min-h-screen bg-tg-bg">
+        <div className="min-h-screen bg-gray-50 dark:bg-tg-bg">
             <Header currentPage={currentPage} goBack={() => navigate(-1)} />
             <main className="p-4 pb-24">
                 <Outlet />
@@ -76,7 +76,7 @@ const WebLayout: React.FC = () => {
     const navigateTo = (page: Page) => navigate(page === 'home' ? '/' : `/${page}`);
 
     return (
-        <div className="min-h-screen bg-tg-bg text-tg-text flex flex-col">
+        <div className="min-h-screen bg-gray-50 dark:bg-tg-bg text-gray-900 dark:text-tg-text flex flex-col">
             <WebNavbar navigateTo={navigateTo} user={user} logout={logout} />
             <main className="flex-grow container mx-auto px-4 lg:px-8 py-8">
                 <Outlet />
@@ -181,7 +181,7 @@ const App: React.FC = () => {
   const Layout = isWeb ? WebLayout : MobileLayout;
 
   if (isAuthLoading) {
-      return <div className="flex items-center justify-center min-h-screen"><Spinner size="lg" /></div>;
+      return <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-tg-bg"><Spinner size="lg" /></div>;
   }
   
   return (

@@ -1,7 +1,6 @@
-
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings, HomePageBanner, Category, RegionStat } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -28,7 +27,9 @@ export const redeemWebCode = (code: string): Promise<{ data: { token: string, us
 
 
 // --- Ads ---
-export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
+export const getAds = (params: { search?: string, category?: string, sortBy?: string, sellerId?: string, region?: string } = {}): Promise<{ data: Ad[] }> => apiClient.get('/api/ads', { params });
+export const getAdStatsByRegion = (): Promise<{ data: RegionStat[] }> => apiClient.get('/api/ads/stats-by-region');
+
 
 // FIX: Rewritten to use FormData for efficient file uploads instead of base64 strings.
 export const createAd = (data: { adData: GeneratedAdData, images: File[] }): Promise<{ data: Ad }> => {
@@ -95,6 +96,23 @@ export const updateAdminAd = (id: string, data: Partial<AdminAd>): Promise<{ dat
 export const deleteAdminAd = (id: string): Promise<any> => apiClient.delete(`/api/admin/ads/${id}`);
 export const getAdminSettings = (): Promise<{ data: StorageSettings }> => apiClient.get('/api/admin/settings');
 export const updateAdminSettings = (settings: Partial<StorageSettings>): Promise<{ data: { message: string } }> => apiClient.put('/api/admin/settings', settings);
+
+// Banner
+export const getBanner = (): Promise<{ data: HomePageBanner | null }> => apiClient.get('/api/admin/banner');
+export const updateBanner = (data: { bannerData: Partial<HomePageBanner>, image?: File }): Promise<{ data: HomePageBanner }> => {
+    const formData = new FormData();
+    formData.append('bannerData', JSON.stringify(data.bannerData));
+    if (data.image) {
+        formData.append('image', data.image);
+    }
+    return apiClient.post('/api/admin/banner', formData);
+};
+
+// Categories
+export const getCategories = (): Promise<{ data: Category[] }> => apiClient.get('/api/admin/categories');
+export const createCategory = (data: { name: string, parentId?: string | null }): Promise<{ data: Category }> => apiClient.post('/api/admin/categories', data);
+export const updateCategory = (id: string, data: { name: string, parentId?: string | null }): Promise<{ data: Category }> => apiClient.put(`/api/admin/categories/${id}`, data);
+export const deleteCategory = (id: string): Promise<any> => apiClient.delete(`/api/admin/categories/${id}`);
 
 
 // ... other API functions will be added here as we migrate them ...

@@ -18,11 +18,11 @@ const Header: React.FC<HeaderProps> = ({ currentPage, goBack }) => {
   };
   
   return (
-    <header className="sticky top-0 z-20 bg-tg-secondary-bg/80 backdrop-blur-md shadow-sm">
+    <header className="sticky top-0 z-20 bg-white/80 dark:bg-tg-secondary-bg/80 backdrop-blur-md shadow-sm">
       <div className="flex items-center justify-between p-4 h-16">
         <div className="w-1/4">
           {showBackButton && (
-            <button onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-tg-secondary-bg-hover">
+            <button onClick={goBack} className="p-2 -ml-2 rounded-full hover:bg-gray-200 dark:hover:bg-tg-secondary-bg-hover">
               <Icon icon="lucide:arrow-left" className="h-6 w-6" />
             </button>
           )}

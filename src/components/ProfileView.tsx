@@ -8,6 +8,7 @@ import { resolveImageUrl } from '../utils/formatters';
 import { generateWebCode, getAds } from '../apiClient';
 import Spinner from './Spinner';
 import { useAuth } from '../AuthContext';
+import { useTheme } from '../ThemeContext';
 
 
 interface ProfileViewProps {
@@ -22,10 +23,10 @@ const ProfileButton: React.FC<{
     disabled?: boolean;
 }> = ({ icon, label, to, onClick, disabled }) => {
     const content = (
-        <div className="w-full flex items-center p-4 bg-tg-secondary-bg rounded-lg hover:bg-tg-secondary-bg-hover transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed">
+        <div className="w-full flex items-center p-4 bg-white dark:bg-tg-secondary-bg rounded-lg hover:bg-gray-100 dark:hover:bg-tg-secondary-bg-hover transition-colors relative disabled:opacity-50 disabled:cursor-not-allowed">
             {icon}
             <span className="ml-4 font-semibold">{label}</span>
-            {disabled && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs bg-tg-bg px-2 py-1 rounded-full text-tg-hint">{useI18n().t('common.soon')}</span>}
+            {disabled && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs bg-gray-200 dark:bg-tg-bg px-2 py-1 rounded-full text-gray-500 dark:text-tg-hint">{useI18n().t('common.soon')}</span>}
         </div>
     );
     
@@ -66,10 +67,10 @@ const AdManagementDropdown: React.FC<{ ad: Ad, onUpdateStatus: (adId: string, st
                 <Icon icon="lucide:more-vertical" className="h-5 w-5" />
             </button>
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-tg-secondary-bg-hover rounded-md shadow-lg py-1">
-                    {ad.status !== 'sold' && <button onClick={() => handleStatusChange('sold')} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">{t('profile.markAsSold')}</button>}
-                    {ad.status !== 'archived' && <button onClick={() => handleStatusChange('archived')} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">{t('profile.archive')}</button>}
-                    {ad.status !== 'active' && <button onClick={() => handleStatusChange('active')} className="block w-full text-left px-4 py-2 text-sm hover:bg-tg-bg">{t('profile.activate')}</button>}
+                <div className="absolute right-0 mt-2 w-48 bg-gray-100 dark:bg-tg-secondary-bg-hover rounded-md shadow-lg py-1">
+                    {ad.status !== 'sold' && <button onClick={() => handleStatusChange('sold')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 dark:hover:bg-tg-bg">{t('profile.markAsSold')}</button>}
+                    {ad.status !== 'archived' && <button onClick={() => handleStatusChange('archived')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 dark:hover:bg-tg-bg">{t('profile.archive')}</button>}
+                    {ad.status !== 'active' && <button onClick={() => handleStatusChange('active')} className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-200 dark:hover:bg-tg-bg">{t('profile.activate')}</button>}
                 </div>
             )}
         </div>
@@ -121,7 +122,7 @@ const WebLoginSection: React.FC = () => {
     };
 
     return (
-        <div className="my-8 p-4 bg-tg-secondary-bg rounded-lg">
+        <div className="my-8 p-4 bg-white dark:bg-tg-secondary-bg rounded-lg">
             <h3 className="text-xl font-bold mb-4 text-center">{t('profile.webLogin')}</h3>
             {!webCode ? (
                 <button onClick={handleGenerateCode} disabled={isLoading} className="w-full bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 flex items-center justify-center">
@@ -129,9 +130,9 @@ const WebLoginSection: React.FC = () => {
                 </button>
             ) : (
                 <div className="text-center">
-                    <p className="text-tg-hint text-sm">{t('profile.yourCode')}</p>
-                    <p className="text-4xl font-mono tracking-widest my-2 p-2 bg-tg-bg rounded-lg">{webCode.code}</p>
-                    <p className="text-tg-hint text-sm">{t('profile.codeExpiresIn')} {formatTime(timeLeft)}</p>
+                    <p className="text-gray-500 dark:text-tg-hint text-sm">{t('profile.yourCode')}</p>
+                    <p className="text-4xl font-mono tracking-widest my-2 p-2 bg-gray-100 dark:bg-tg-bg rounded-lg">{webCode.code}</p>
+                    <p className="text-gray-500 dark:text-tg-hint text-sm">{t('profile.codeExpiresIn')} {formatTime(timeLeft)}</p>
                 </div>
             )}
             {error && <p className="text-red-400 text-center mt-2">{error}</p>}
@@ -142,6 +143,7 @@ const WebLoginSection: React.FC = () => {
 const ProfileView: React.FC<ProfileViewProps> = ({ onUpdateAdStatus }) => {
   const { user: currentUser } = useAuth();
   const { t } = useI18n();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [myAds, setMyAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -164,14 +166,19 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onUpdateAdStatus }) => {
   return (
     <div>
       <div className="flex flex-col items-center mb-8">
-        <img src={userAvatar} alt="User Avatar" className="w-24 h-24 rounded-full mb-4 object-cover border-2 border-tg-border" />
+        <img src={userAvatar} alt="User Avatar" className="w-24 h-24 rounded-full mb-4 object-cover border-2 border-gray-300 dark:border-tg-border" />
         <h2 className="text-2xl font-bold">{currentUser.name}</h2>
-        <p className="text-tg-hint">{currentUser.email}</p>
+        <p className="text-gray-500 dark:text-tg-hint">{currentUser.email}</p>
       </div>
       
       <div className="space-y-2 mb-8">
-          <ProfileButton to="/favorites" label={t('profile.favorites')} icon={<Icon icon="lucide:heart" className="h-6 w-6 text-tg-hint" />} />
-          <ProfileButton label={t('profile.savedSearches')} disabled icon={<Icon icon="lucide:bookmark" className="h-6 w-6 text-tg-hint" />} />
+          <ProfileButton to="/favorites" label={t('profile.favorites')} icon={<Icon icon="lucide:heart" className="h-6 w-6 text-gray-500 dark:text-tg-hint" />} />
+          <ProfileButton 
+            onClick={toggleTheme} 
+            label={theme === 'dark' ? t('theme.switchToLight') : t('theme.switchToDark')} 
+            icon={<Icon icon={theme === 'dark' ? 'lucide:sun' : 'lucide:moon'} className="h-6 w-6 text-gray-500 dark:text-tg-hint" />} 
+          />
+          <ProfileButton label={t('profile.savedSearches')} disabled icon={<Icon icon="lucide:bookmark" className="h-6 w-6 text-gray-500 dark:text-tg-hint" />} />
       </div>
       
       <WebLoginSection />
@@ -190,8 +197,8 @@ const ProfileView: React.FC<ProfileViewProps> = ({ onUpdateAdStatus }) => {
           ))}
         </div>
       ) : (
-        <div className="text-center text-tg-hint mt-12 flex flex-col items-center">
-          <Icon icon="lucide:package-search" className="h-20 w-20 text-tg-border" />
+        <div className="text-center text-gray-500 dark:text-tg-hint mt-12 flex flex-col items-center">
+          <Icon icon="lucide:package-search" className="h-20 w-20 text-gray-300 dark:text-tg-border" />
           <p className="text-lg mt-4 mb-4">{t('profile.noAds')}</p>
           <button onClick={() => navigate('/create')} className="bg-tg-button text-tg-button-text font-bold py-3 px-6 rounded-lg hover:bg-opacity-90 transition-colors">
             {t('profile.createFirstAd')}

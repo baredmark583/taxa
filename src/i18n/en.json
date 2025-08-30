@@ -118,5 +118,8 @@
   "common.logout": "Logout",
   "common.or": "or",
   "common.soon": "soon",
-  "common.comingSoon": "Coming soon!"
+  "common.comingSoon": "Coming soon!",
+
+  "theme.switchToLight": "Switch to Light Theme",
+  "theme.switchToDark": "Switch to Dark Theme"
 }

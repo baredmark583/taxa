@@ -227,3 +227,24 @@ export interface Follow {
     followerId: string;
     sellerId: string;
 }
+
+// --- Rebranding Types ---
+export interface HomePageBanner {
+    id: string;
+    imageUrl: string;
+    title: string;
+    subtitle?: string;
+    buttonText?: string;
+    buttonLink?: string;
+}
+
+export interface Category {
+    id: string;
+    name: string;
+    parentId: string | null;
+}
+
+export interface RegionStat {
+    region: string;
+    count: number;
+}

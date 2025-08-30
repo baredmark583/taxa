@@ -5,6 +5,7 @@ import { AuthProvider } from './AuthContext';
 import { I18nProvider } from './I18nContext';
 import { AppProvider } from './AppContext';
 import { BrowserRouter } from 'react-router-dom';
+import { ThemeProvider } from './ThemeContext';
 import './stile/index.css';
 
 const rootElement = document.getElementById('root');
@@ -19,7 +20,9 @@ root.render(
       <AuthProvider>
         <I18nProvider>
           <AppProvider>
-            <App />
+            <ThemeProvider>
+              <App />
+            </ThemeProvider>
           </AppProvider>
         </I18nProvider>
       </AuthProvider>
