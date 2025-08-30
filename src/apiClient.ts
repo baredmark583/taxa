@@ -1,6 +1,6 @@
 import axios from 'axios';
 // FIX: Added AdminStats to imports.
-import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings, HomePageBanner, Category, RegionStat } from './types';
+import { type Ad, type GeneratedAdData, type AdminUser, type AdminAd, type AuthUser, type AdminStats, AnalyticsData, AdStatus, ChatConversation, ChatMessage, StorageSettings, HomePageBanner, Category, RegionStat, AutomationRunHistory } from './types';
 
 // FIX: Use an environment variable for the base URL in production.
 // In development, this will be falsy, and relative paths will be used, which is handled by Vite's proxy.
@@ -117,6 +117,7 @@ export const deleteCategory = (id: string): Promise<any> => apiClient.delete(`/a
 // Automation
 export const getAutomationFlow = (triggerType: string): Promise<{ data: { flowData: any } }> => apiClient.get('/api/admin/automation', { params: { triggerType } });
 export const saveAutomationFlow = (name: string, triggerType: string, flowData: any): Promise<any> => apiClient.post('/api/admin/automation', { name, triggerType, flowData });
+export const getAutomationHistory = (): Promise<{ data: AutomationRunHistory[] }> => apiClient.get('/api/admin/automation/history');
 
 
 // ... other API functions will be added here as we migrate them ...

@@ -248,3 +248,14 @@ export interface RegionStat {
     region: string;
     count: number;
 }
+
+export interface AutomationRunHistory {
+    id: string;
+    flowId: string;
+    triggerType: string;
+    triggerData: any; // JSONB
+    status: 'STARTED' | 'SUCCESS' | 'FAILED';
+    logs: string[]; // TEXT[]
+    createdAt: string; // TIMESTAMP
+    updatedAt: string; // TIMESTAMP
+}
