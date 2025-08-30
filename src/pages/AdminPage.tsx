@@ -6,10 +6,11 @@ import UserMap from './UserMap';
 import DashboardView from './admin/DashboardView';
 import AnalyticsView from './admin/AnalyticsView';
 import SettingsView from './admin/SettingsView';
-import CategoriesView from './admin/CategoriesView'; // Импортируем новый компонент
+import CategoriesView from './admin/CategoriesView';
+import AutomationView from './admin/AutomationView'; // Импортируем новый компонент
 import { Icon } from '@iconify/react';
 
-type AdminView = 'dashboard' | 'users' | 'ads' | 'map' | 'analytics' | 'settings' | 'categories';
+type AdminView = 'dashboard' | 'users' | 'ads' | 'map' | 'analytics' | 'settings' | 'categories' | 'automation';
 
 interface AdminPageProps {
     showToast: (message: string) => void;
@@ -162,6 +163,8 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                 return analytics ? <AnalyticsView analyticsData={analytics} /> : null;
             case 'categories':
                 return <CategoriesView showToast={showToast} />;
+            case 'automation':
+                return <AutomationView />;
             case 'settings':
                 return <SettingsView showToast={showToast} />;
             case 'users':
@@ -229,6 +232,7 @@ const AdminPage: React.FC<AdminPageProps> = ({ showToast }) => {
                      <button onClick={() => setView('dashboard')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'dashboard' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Dashboard</button>
                      <button onClick={() => setView('analytics')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'analytics' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Аналітика</button>
                      <button onClick={() => setView('categories')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'categories' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Категорії</button>
+                     <button onClick={() => setView('automation')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'automation' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Автоматизація</button>
                     <button onClick={() => setView('users')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'users' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Користувачі</button>
                      <button onClick={() => setView('ads')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'ads' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Оголошення</button>
                      <button onClick={() => setView('map')} className={`px-4 py-2 font-semibold whitespace-nowrap ${view === 'map' ? 'text-tg-link border-b-2 border-tg-link' : 'text-tg-hint'}`}>Карта</button>

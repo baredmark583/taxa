@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { type Ad, type Page, HomePageBanner, RegionStat } from '../types';
+import { type Ad, type Page, HomePageBanner, RegionStat, Category } from '../types';
 import AdCard from './AdCard';
 import { Icon } from '@iconify/react';
-import { getAds, getBanner, getAdStatsByRegion } from '../apiClient';
+import { getAds, getBanner, getAdStatsByRegion, getCategories } from '../apiClient';
 import Spinner from './Spinner';
 import { useI18n } from '../I18nContext';
 import { useAppContext } from '../AppContext';
@@ -34,15 +34,15 @@ const debounce = <F extends (...args: any[]) => any>(func: F, waitFor: number) =
 const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) => {
   const { t } = useI18n();
   const { isWeb } = useAppContext();
-  const CATEGORIES = useMemo(() => (t('categories').split(',')), [t]);
   
   const [ads, setAds] = useState<Ad[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [banner, setBanner] = useState<HomePageBanner | null>(null);
   const [regionStats, setRegionStats] = useState<RegionStat[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Filters
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [selectedCategory, setSelectedCategory] = useState(t('categories').split(',')[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>('date');
@@ -53,16 +53,17 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
       try {
         const apiCategory = category === t('categories').split(',')[0] ? 'Все' : category;
         
-        // Fetch ads and banner/map data in parallel
-        const [adsResponse, bannerResponse, statsResponse] = await Promise.all([
+        const [adsResponse, bannerResponse, statsResponse, categoriesResponse] = await Promise.all([
           getAds({ search, category: apiCategory, sortBy: sort, region: region || undefined }),
           getBanner(),
-          getAdStatsByRegion()
+          getAdStatsByRegion(),
+          getCategories()
         ]);
         
         setAds(adsResponse.data);
         setBanner(bannerResponse.data);
         setRegionStats(statsResponse.data);
+        setCategories([t('categories').split(',')[0], ...categoriesResponse.data.map(c => c.name)]);
 
       } catch (error) {
         console.error("Failed to fetch page data:", error);
@@ -76,9 +77,8 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
   const debouncedFetchAds = useMemo(() => debounce(fetchAdsAndData, 300), [fetchAdsAndData]);
 
   useEffect(() => {
-    // Initial fetch
     fetchAdsAndData(searchQuery, selectedCategory, sortBy, selectedRegion);
-  }, []); // Only on mount
+  }, []); 
 
   useEffect(() => {
     debouncedFetchAds(searchQuery, selectedCategory, sortBy, selectedRegion);
@@ -133,7 +133,7 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
           
           <div className="flex flex-row-reverse gap-8">
               <Sidebar 
-                  categories={CATEGORIES}
+                  categories={categories}
                   selectedCategory={selectedCategory}
                   onSelectCategory={setSelectedCategory}
                   stats={regionStats}
@@ -162,7 +162,7 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
        </div>
         <div className="mb-4 overflow-x-auto pb-2 -mx-4 px-4">
             <div className="flex space-x-2">
-            {CATEGORIES.map(category => (
+            {categories.map(category => (
                 <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}

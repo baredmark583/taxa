@@ -33,3 +33,53 @@ body {
 .dark .leaflet-tile-container {
     filter: brightness(0.8) contrast(1.1);
 }
+
+/* Custom styles for React Flow */
+.react-flow__node-default {
+    background: #2b3b4c; /* tg-secondary-bg-hover */
+    border: 1px solid #2f3f50; /* tg-border */
+    color: #ffffff; /* tg-text */
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.react-flow__node.selected .react-flow__node-default {
+    border-color: #62a9e3; /* tg-link */
+    box-shadow: 0 0 10px #62a9e366;
+}
+
+.react-flow__handle {
+    background: #62a9e3 !important; /* tg-link */
+    border-radius: 50%;
+    width: 10px !important;
+    height: 10px !important;
+    border: 2px solid #18222d !important; /* tg-bg */
+}
+
+.react-flow__edge-path {
+    stroke: #62a9e3; /* tg-link */
+    stroke-width: 2;
+}
+
+.node-icon {
+    width: 16px;
+    height: 16px;
+    color: #b1c3d5; /* tg-hint */
+}
+
+.node-trigger {
+    background-color: #265c40;
+    border-color: #3aa869;
+}
+.node-action {
+    background-color: #2b3b4c;
+    border-color: #2f3f50;
+}
+.node-log {
+    background-color: #594228;
+    border-color: #a87d3a;
+}

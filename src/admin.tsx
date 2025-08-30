@@ -4,6 +4,7 @@ import AdminApp from './AdminApp';
 import { AuthProvider } from './AuthContext';
 import { I18nProvider } from './I18nContext';
 import './stile/index.css';
+import 'reactflow/dist/style.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
