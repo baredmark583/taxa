@@ -131,7 +131,7 @@ const HomeView: React.FC<HomeViewProps> = ({ favoriteAdIds, onToggleFavorite }) 
             </div>
           )}
           
-          <div className="flex gap-8">
+          <div className="flex flex-row-reverse gap-8">
               <Sidebar 
                   categories={CATEGORIES}
                   selectedCategory={selectedCategory}
